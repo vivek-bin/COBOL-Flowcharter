@@ -1,12 +1,5 @@
-PATH = "D:\\Profiles\\vbindal\\Documents\\CAAGIS flow track\\"
-SRCELIB = PATH + "MTP\\SRCELIB\\"
-COPYLIB = PATH + "MTP\\COPYLIB\\"
-INCLUDE = PATH + "MTP\\INCLUDE\\"
-EXPANDED = PATH + "MTP\\EXPANDED\\"
-PROCESSING = PATH + "MTP\\PROCESSING\\"
-DATA = PATH + "DATA\\"
-
-mainStatementKeyWords = []
+import constants as CONST
+import keywords
 
 def writeFile(inputFileName,lib,inputList):
 	try:
@@ -20,8 +13,11 @@ def loadFile(inputFileName,lib):
 	f = []
 	try:
 		inputFile = open(lib+inputFileName+".txt")
-
-		f = [l[:72].rstrip() for l in inputFile]
+		
+		if lib in (CONST.SRCELIB,CONST.COPYLIB,CONST.INCLUDE):
+			f = [l[:72].rstrip() for l in inputFile]
+		else:
+			f = [l.rstrip() for l in inputFile]
 		inputFile.close()
 	except IOError:
 		pass
@@ -73,10 +69,9 @@ def expandFile(inputFile):
 				file.append(specialLine)
 				
 			if expandFlag:
-				copyFile = loadFile(copyFileName,COPYLIB)
+				copyFile = loadFile(copyFileName,CONST.COPYLIB)
 				if not copyFile:
-					copyFile = loadFile(copyFileName,INCLUDE)
-				#copyFile = copyLibDict[copyFileName]
+					copyFile = loadFile(copyFileName,CONST.INCLUDE)
 				
 				if inputLine.find("replacing") != -1:
 					inputLine = inputLine[inputLine.find("replacing") + len("replacing") + 1:-1].strip()
@@ -114,15 +109,16 @@ def processingFile(inputFile):
 		
 	return file
 
-def processingFile2(inputFile):
+def processingFileClean(inputFile):
+	file = []
 	procedureDivisionPos = 0
 	for inputLine in inputFile:
 		if inputLine[:18] == "procedure division":
 			break
 		procedureDivisionPos += 1
-	#procedureDivisionPos = inputFile.index("procedure division.")
 	file = inputFile[:procedureDivisionPos+1]
 	inputFile = inputFile[procedureDivisionPos+1:]
+	
 	line = ""
 	execFlag = False
 	for inputLine in inputFile:
@@ -134,6 +130,13 @@ def processingFile2(inputFile):
 			file.append(inputLine)
 			continue
 		
+		if inputLine[0] != " " and len(inputWords) == 2 and inputWords[1] == "section":
+			if line:
+				file.append(line)
+				line = ""
+			file.append(inputWords[0]+".")
+			continue			
+		
 		if inputWords[0] == "exec":
 			execFlag = True
 		if "end-exec" in inputWords:
@@ -144,7 +147,7 @@ def processingFile2(inputFile):
 			file.append(inputLine)
 			continue
 			
-		if inputWords[0] in mainStatementKeyWords or inputLine[0] != " ":
+		if  keywords.isMainVerb(inputWords[0]) or inputLine[0] != " ":
 			if line:
 				file.append(line)
 			line = inputLine
@@ -164,7 +167,7 @@ def isCobolProgram(inputFile):
 			continue
 		if inputLine[6] != " ":
 			continue
-			
+		
 		inputLine = " ".join(inputLine[6:].split()).lower()
 				
 		if inputLine == "eject" or inputLine == "eject.":
@@ -181,53 +184,19 @@ def isCobolProgram(inputFile):
 		return False
 	return False
 
-def loadSRCE(component):
-	return loadFile(component,SRCELIB)
-	
-def loadDATA(component):
-	return loadFile(component,DATA)
-	
-def writeProcessingExpandSRCE(component):
-	src = loadSRCE(component)
+def writeProcessingExpand(component):
+	src = loadFile(component,CONST.SRCELIB)
 	if not isCobolProgram(src):
 		if component[2:4].lower() != "ms":
 			print ("not COBOL:" + component)
-		writeFile(component,EXPANDED,src)
-		#writeFile(component,PROCESSING,src)
+		writeFile(component,CONST.EXPANDED,src)
+		#writeFile(component,CONST.PROCESSING,src)
 	else:
 		expandSrce = expandFile(src)
-		writeFile(component,EXPANDED,expandSrce)
-		writeFile(component,PROCESSING,processingFile(expandSrce))
+		writeFile(component,CONST.EXPANDED,expandSrce)
+		writeFile(component,CONST.PROCESSING,processingFileClean(processingFile(expandSrce)))
 	
-def writeProcessingExpandSRCE2(component):
-	src = loadSRCE(component)
-	if not isCobolProgram(src):
-		if component[2:4].lower() != "ms":
-			print ("not COBOL:" + component)
-		writeFile(component,EXPANDED,src)
-		#writeFile(component,PROCESSING,src)
-	else:
-		expandSrce = expandFile(src)
-		writeFile(component,EXPANDED,expandSrce)
-		print(component)
-		writeFile(component,PROCESSING,processingFile2(processingFile(expandSrce)))
-
-def loadCopylibInclude():
-	lib={}
-	import os
-	cList = os.listdir(COPYLIB)
-	iList = os.listdir(INCLUDE)
-	cList=[li.rstrip(".txt") for li in cList] 
-	iList=[li.rstrip(".txt") for li in iList] 
-
-	for cName in cList:
-		lib[cName.lower()] = loadFile(cName,COPYLIB)
-	for iName in iList:
-		lib[iName.lower()] = loadFile(iName,INCLUDE)
-	
-	return lib
-	
-def expandCountReadLib(inputFile):
+def getIncludedCopybooks(inputFile):
 	file = []
 	
 	lineNo = -1
@@ -265,43 +234,24 @@ def expandCountReadLib(inputFile):
 				expandFlag = False
 				
 			if expandFlag:
-				#copyFile = loadFile(copyFileName,COPYLIB)
-				#if not copyFile:
-				#	copyFile = loadFile(copyFileName,INCLUDE)
 				file.append(copyFileName)
 			continue
 		
 	return file
 	
-	
-def t1():
+def writeAllProcessingExpand(count=999999):
 	import os
 	import time
 	startTime = time.time()
-	l=os.listdir(SRCELIB)
-	l1=[li.rstrip(".txt") for li in l] 
-	l2=l1[:1000]
-
-	for n in l1:
-		writeProcessingExpandSRCE(n)
-	print (time.time() - startTime)
+	list = os.listdir(CONST.SRCELIB)
+	list = [fileName.rstrip(".txt") for fileName in list]
+	processingList = list[:count]
 		
-def t2():
-	import os
-	import time
-	startTime = time.time()
-	l=os.listdir(SRCELIB)
-	l1=[li.rstrip(".txt") for li in l] 
-	l2=l1[:200]
+	for fileName in processingList:
+		writeProcessingExpand(fileName)
+	print (time.time() - startTime)
+
+def t1():
+	writeAllProcessingExpand(100)
 	
-	for n in l1:
-		writeProcessingExpandSRCE2(n)
-	print (time.time() - startTime)	
 	
-#t1()
-#copyLibDict = loadCopylibInclude()
-
-mainStatementKeyWords = loadDATA("MainKeywords")
-
-t2()
-

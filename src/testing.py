@@ -1,9 +1,4 @@
-PATH = "E:\\CAAGIS flow tracker\\MTP\\MTP\\"
-SRCELIB = PATH + "SRCELIB\\"
-COPYLIB = PATH + "COPYLIB\\"
-INCLUDE = PATH + "INCLUDE\\"
-EXPANDED = PATH + "EXPANDED\\"
-PROCESSING = PATH + "PROCESSING\\"
+import constants as CONST
 
 
 def loadFile(inputFileName,lib):
@@ -37,11 +32,11 @@ def t6():
 	import os
 	import time
 	startTime = time.time()
-	l=os.listdir(COPYLIB)
+	l=os.listdir(CONST.COPYLIB)
 	l1=[li.rstrip(".txt") for li in l] 
 	l2=l1[:5000]
 	for n in l1:
-		if isCobolProgram(loadFile(n,COPYLIB)):
+		if isCobolProgram(loadFile(n,CONST.COPYLIB)):
 			print n
 	print time.time() - startTime
 	

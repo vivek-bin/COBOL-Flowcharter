@@ -1,14 +1,21 @@
 import os
-path  = "D:\\Profiles\\vbindal\\Documents\\MTP\\"
-SRCELIB  = path+"SRCELIB\\"
-COPYLIB  = path+"COPYLIB\\"
-INCLUDE  = path+"INCLUDE\\"
-li=os.listdir(SRCELIB)
-for l in li:
-	os.rename(SRCELIB+l,SRCELIB+l[20:]+".txt")
-li=os.listdir(COPYLIB)
-for l in li:
-	os.rename(COPYLIB+l,COPYLIB+l[20:]+".txt")
-li=os.listdir(INCLUDE)
-for l in li:
-	os.rename(INCLUDE+l,INCLUDE+l[20:]+".txt")
+import constants as CONST
+
+def renameLib(lib):
+	li=os.listdir(lib)
+	for l in li:
+		os.rename(lib+l,lib+l[20:]+".txt")
+
+def renameSRCELIB():
+	renameLib(CONST.SRCELIB)
+	
+def renameCOPYLIB():
+	renameLib(CONST.COPYLIB)
+	
+def renameINCLUDE():
+	renameLib(CONST.INCLUDE)
+	
+def renameAll():
+	renameSRCELIB()
+	renameCOPYLIB()
+	renameINCLUDE()
