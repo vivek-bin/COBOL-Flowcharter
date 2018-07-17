@@ -102,7 +102,19 @@ def processingFile(inputFile):
 		inputLine = inputLine[7:]
 
 		if inputLine[:4] == "    ":
-			inputLine = "    " + " ".join(inputLine.split())
+			inputLine = " ".join(inputLine.split())
+			inputLine = inputLine.replace("( ","(").replace(" )",")")
+			words = inputLine.split()
+			
+			inputLine = prevWord = words[0]
+			for currWord in words[1:]:
+				if currWord[0] != "(" or keywords.isKeyword(prevWord):
+					inputLine += " "
+				inputLine += currWord
+				prevWord = currWord
+					
+			#inputLine = inputLine.replace(" (","(")
+			inputLine = "    " + inputLine
 		else:
 			inputLine = " ".join(inputLine.split())
 		file.append(inputLine)
