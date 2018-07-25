@@ -85,12 +85,26 @@ def createChart(PU,ignorePeriod=False):
 		if lineDict["go to"]:
 			programObj.append(GoToNode(PU,lineDict["go to"]))
 		
-		#check chart end
-		if lineDict["return statement"]:
-			if lineDict["return statement"] != "." or not ignorePeriod:
-				break
+		#perform nodes
+		if lineDict["perform"]:
+			if lineDict["until"]:
+				tempObj = LoopNode(PU,lineDict["until"])
+			else:
+				tempObj = NonLoopNode(PU)
+			
+			if type(lineDict["perform"]) is str:
+				performStart = lineDict["perform"]
+				performEnd = lineDict["perform"]
+				if lineDict["thru"]:
+					performEnd = lineDict["thru"]
+				PU.pushStack(performStart,performEnd)
+				subChart = createChart(PU,True)
+			else:
+				subChart = createChart(PU)
+			programObj.append(tempObj)
+			tempObj = False
 		
-		#process statement
+		#exec nodes
 		if lineDict["exec"]:
 			execBlock = [inputLine]
 			while inputLine.find("end-exec") == -1:
@@ -99,16 +113,26 @@ def createChart(PU,ignorePeriod=False):
 				
 			execDict = digestExecBlock(execBlock)
 			#add the exec block node
+			programObj.append(ExecNode(PU,lineDict["type"]))
 
 		
+		#check chart end
+		if lineDict["return statement"]:
+			if lineDict["return statement"] != "." or not ignorePeriod:
+				break
+		
+		#branching statement
 		if lineDict["if"]:
 			tempObj = IfNode(PU,lineDict["if"])
 			
 			subChart = createChart(PU)
 			tempObj.trueBranch = subChart
 			
-			returnLineDict = digestSentence(PU.peekCurrentStatement())
-			if returnLineDict["return statement"] in ["end-if","."]:
+			inputLine = PU.peekCurrentStatement()
+			lineDict = digestSentence(inputLine)
+			while lineDict["return statement"] in ["go to","goback"]:
+				createChart(PU)
+			if lineDict["return statement"] in ["end-if","."]:
 				programObj.append(tempObj)
 				tempObj = False
 			
@@ -134,29 +158,14 @@ def createChart(PU,ignorePeriod=False):
 				tempObj2.addCondition(lineDict["when"])
 			
 			subChart = createChart(PU)
-			returnLineDict = digestSentence(PU.peekCurrentStatement())
-			if returnLineDict["return statement"] in ["end-evaluate","."]:
+			tempObj2.branch = subChart
+			tempObj.whenList.append(tempObj2)
+			
+			inputLine = PU.peekCurrentStatement()
+			lineDict = digestSentence(inputLine)
+			if lineDict["return statement"] in ["end-evaluate","."]:
 				programObj.append(tempObj)
 				tempObj = False
-			
-			 
-		if lineDict["perform"]:
-			if lineDict["until"]:
-				tempObj = LoopNode(PU,lineDict["until"])
-			else:
-				tempObj = NonLoopNode(PU)
-			
-			if type(lineDict["perform"]) is str:
-				performStart = lineDict["perform"]
-				performEnd = lineDict["perform"]
-				if lineDict["thru"]:
-					performEnd = lineDict["thru"]
-				PU.pushStack(performStart,performEnd)
-				subChart = createChart(PU,True)
-			else:
-				subChart = createChart(PU)
-			programObj.append(tempObj)
-			tempObj = False
 			
 		
 		if PU.paraReturn:
@@ -240,7 +249,7 @@ def digestSentence(inputLine):
 	if words[0] = "exit" and words[1] = "program":
 		lineDict["goback"] = True
 	
-	for word in ["end-if","end-evaluate","end-perform","when","else","go to","."]:
+	for word in ["end-if","end-evaluate","end-perform","when","else","go to",".","goback"]:
 		if lineDict[word]:
 			lineDict["return statement"] = word
 			break

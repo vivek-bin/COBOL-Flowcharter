@@ -43,6 +43,11 @@ class CallNode(Node):
 		self.moduleName = operand
 		self.moduleNameVariable = operand
 	
+class ExecNode(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.type = operand
+	
 class GoToNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
