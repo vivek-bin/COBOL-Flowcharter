@@ -1,38 +1,55 @@
 
-
 class Node:
-	def __init__(self,performStack):
-		self.performStack = performStack[:]
-	
-class Branch:
-	def __init__(self):
-		self.flow = []
-	
-class IfNode:
-	def __init__(self):
-		self.trueBranch = Branch()
-		self.falseBranch = Branch()
+	def __init__(self,PU):
+		self.paraStack = PU.paraStack[:]
+		self.lineNo = PU.programCounter
+		
+class IfNode(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.condition = operand
+		self.trueBranch = []
+		self.falseBranch = []
 
-class EvaluateNode:
-	def __init__(self):
-		self.branchList = []
+class EvaluateNode(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.condition = operand
+		self.whenList = []
 	
-class LoopNode:
-	def __init__(self):
-		self.loopFlow = Branch()
+class WhenNode(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.condition = [operand]
+		self.branch = []
+		
+	def addCondition(self,operand):
+		self.condition.append(operand)
 	
-class NonLoopNode:
-	def __init__(self):
-		self.flow = Branch()
+class LoopNode(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.condition = operand
+		self.branch = []
 	
-class CallNode:
-	def __init__(self):
-		self.moduleName = ""
+class NonLoopNode(Node):
+	def __init__(self,PU):
+		Node.__init__(self,PU)
+		self.branch = []
 	
-class GoToNode:
-	def __init__(self):
-		self.link = ""
+class CallNode(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.moduleName = operand
+		self.moduleNameVariable = operand
 	
-class EndNode:
-	def __init__(self):
-		self.errorEnd = 0
+class GoToNode(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.link = operand
+	
+class EndNode(Node):
+	def __init__(self,PU,operand=0):
+		Node.__init__(self,PU)
+		self.errorEnd = operand
+
