@@ -16,7 +16,7 @@ class ProcessingUnit:
 		if type(inputArg) is ProcessingUnit:
 			self.performReturnStack = inputArg.performReturnStack[:]
 			self.performEndStack = inputArg.performEndStack[:]
-			self.programCounter = inputArg.programCounter
+			self.programCounter = inputArg.programCounter - 0
 			self.inputFile = inputArg.inputFile
 		
 		if type(inputArg) is ProgramProcessingFile:
@@ -83,7 +83,10 @@ def createChart(PU,ignorePeriod=False):
 		if lineDict["goback"]:
 			programObj.append(EndNode(PU,lineDict["goback"]))
 		if lineDict["go to"]:
-			programObj.append(GoToNode(PU,lineDict["go to"]))
+			tempObj = GoToNode(PU,lineDict["go to"])
+			if lineDict["go to"] not in PU.performEndStack:
+				subChart = createChart(ProcessingUnit(PU),True)
+			programObj.append(tempObj)
 		
 		#perform nodes
 		if lineDict["perform"]:
@@ -99,8 +102,17 @@ def createChart(PU,ignorePeriod=False):
 					performEnd = lineDict["thru"]
 				PU.pushStack(performStart,performEnd)
 				subChart = createChart(PU,True)
+				while lineDict["return statement"] in ["go to","goback"]:
+					createChart(PU,True)
+					inputLine = PU.peekCurrentStatement()
+					lineDict = digestSentence(inputLine)
+
 			else:
 				subChart = createChart(PU)
+				while lineDict["return statement"] in ["go to","goback"]:
+					createChart(PU)
+					inputLine = PU.peekCurrentStatement()
+					lineDict = digestSentence(inputLine)
 			programObj.append(tempObj)
 			tempObj = False
 		
@@ -132,15 +144,23 @@ def createChart(PU,ignorePeriod=False):
 			lineDict = digestSentence(inputLine)
 			while lineDict["return statement"] in ["go to","goback"]:
 				createChart(PU)
+				inputLine = PU.peekCurrentStatement()
+				lineDict = digestSentence(inputLine)
 			if lineDict["return statement"] in ["end-if","."]:
 				programObj.append(tempObj)
 				tempObj = False
+				if lineDict["."] and not ignorePeriod:
+					break
 			
 			
 		if lineDict["else"]:
 			subChart = createChart(PU)
 			tempObj.falseBranch = subChart
-			
+			while lineDict["return statement"] in ["go to","goback"]:
+				createChart(PU)
+				inputLine = PU.peekCurrentStatement()
+				lineDict = digestSentence(inputLine)
+				
 			returnLineDict = digestSentence(PU.peekCurrentStatement())
 			programObj.append(tempObj)
 			tempObj = False
@@ -148,9 +168,8 @@ def createChart(PU,ignorePeriod=False):
 			
 		if lineDict["evaluate"]:
 			tempObj = EvaluateNode(PU,lineDict["evaluate"])
-			
 		
-		if lineDict["when"]:
+		while lineDict["when"]:
 			tempObj2 = WhenNode(lineDict["when"])
 			while digestSentence(PU.peekNextStatement())["when"]:
 				inputLine = PU.getNextStatement()
@@ -163,9 +182,15 @@ def createChart(PU,ignorePeriod=False):
 			
 			inputLine = PU.peekCurrentStatement()
 			lineDict = digestSentence(inputLine)
+			while lineDict["return statement"] in ["go to","goback"]:
+				createChart(PU)
+				inputLine = PU.peekCurrentStatement()
+				lineDict = digestSentence(inputLine)
 			if lineDict["return statement"] in ["end-evaluate","."]:
 				programObj.append(tempObj)
 				tempObj = False
+				if lineDict["."] and not ignorePeriod:
+					break
 			
 		
 		if PU.paraReturn:

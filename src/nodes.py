@@ -52,6 +52,7 @@ class GoToNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
 		self.link = operand
+		self.branch = []
 	
 class EndNode(Node):
 	def __init__(self,PU,operand=0):
