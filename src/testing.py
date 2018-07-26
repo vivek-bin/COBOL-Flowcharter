@@ -21,12 +21,37 @@ def isCobolProgram(inputFile):
 		if inputLine == "eject" or inputLine == "eject.":
 			continue
 			
-		if inputLine.find("identification ") != -1 or inputLine.find("id ") != -1:
-			if inputLine.find(" division") != -1:
+		if "identification " in inputLine or "id " in inputLine:
+			if " division" in inputLine:
 				return True
 		return False
 	return False
 	
+def fileLength(inputFileName,lib):
+	i = -1
+	f = open(lib+inputFileName+".txt")
+	for i, l in enumerate(f):
+		pass
+	f.close()
+	return i + 1
+	
+def t1():
+	import os
+	import time
+	startTime = time.time()
+	l=os.listdir(CONST.PROCESSING)
+	l1=[li.rstrip(".txt") for li in l] 
+	l2=l1[:5000]
+	maxl = -1
+	pname = ""
+	for n in l1:
+		len = fileLength(n,CONST.PROCESSING)
+		if len > maxl:
+			pname = n
+			maxl = len
+	print pname
+	print maxl
+	print time.time() - startTime
 	
 def t6():
 	import os

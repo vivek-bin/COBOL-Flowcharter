@@ -12,7 +12,7 @@ class ProgramProcessingFile:
 	def searchFile(self,search):
 		i = 0
 		for inputLine in self.inputFile:
-			if inputLine.find(search) != -1:
+			if search in inputLine:
 				return i
 			i += 1
 		return -1
@@ -21,7 +21,7 @@ class ProgramProcessingFile:
 		i = 0
 		li = []
 		for inputLine in self.inputFile:
-			if inputLine.find(search) != -1:
+			if search in inputLine:
 				li.append(i)
 			i += 1
 		return li
@@ -78,6 +78,7 @@ class ProgramProcessingFile:
 	
 	def __init__(self,inputFile=[]):
 		self.inputFile = []
+		self.inputFileLineNo = []
 		self.identificationDivision = []
 		self.environmentDivision = []
 		self.dataDivision = []
@@ -89,7 +90,10 @@ class ProgramProcessingFile:
 			self.loadFile(inputFile)
 		else:
 			self.inputFile = inputFile 
-			
+		
+		self.inputFileLineNo = [inputLine[:CONST.ZEROPAD] for inputLine in self.inputFile]
+		self.inputFile = [inputLine[CONST.ZEROPAD:] for inputLine in self.inputFile]
+		
 		self.setDivisions()
 		self.setParaDictionary()
 	

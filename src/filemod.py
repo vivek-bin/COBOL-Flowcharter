@@ -42,7 +42,7 @@ def expandFile(inputFile):
 		if inputLineStrip[:5] == "copy " or inputLineStrip[:8] == "exec sql":
 			specialBlock = []
 			specialBlock.append(inputLine)
-			while inputLine[6] != " " or (inputLine.find(".") == -1 and inputLine.lower().find("end-exec") == -1):
+			while inputLine[6] != " " or ("." not in inputLine and "end-exec" not in inputLine.lower()):
 				lineNo += 1
 				inputLine = inputFile[lineNo]
 				if len(inputLine) < 8:
@@ -73,7 +73,7 @@ def expandFile(inputFile):
 				if not copyFile:
 					copyFile = loadFile(copyFileName,CONST.INCLUDE)
 				
-				if inputLine.find("replacing") != -1:
+				if "replacing" in inputLine:
 					inputLine = inputLine[inputLine.find("replacing") + len("replacing") + 1:-1].strip()
 					inputLine = inputLine.replace("==","").replace("'","")
 					replacedText = inputLine[:inputLine.find(" ")].upper()
@@ -90,7 +90,7 @@ def expandFile(inputFile):
 def processingFile(inputFile):
 	file = []
 	
-	for inputLine in inputFile:
+	for i, inputLine in enumerate(inputFile):
 		inputLine = inputLine.lower().rstrip()
 		if len(inputLine) < 8:
 			continue
@@ -117,7 +117,7 @@ def processingFile(inputFile):
 			inputLine = "    " + inputLine
 		else:
 			inputLine = " ".join(inputLine.split())
-		file.append(inputLine)
+		file.append(str(i).zfill(CONST.ZEROPAD) + inputLine)
 		
 	return file
 
@@ -125,49 +125,54 @@ def processingFileClean(inputFile):
 	file = []
 	procedureDivisionPos = 0
 	for inputLine in inputFile:
-		if inputLine[:18] == "procedure division":
+		if inputLine[CONST.ZEROPAD:18+CONST.ZEROPAD] == "procedure division":		#line count CONST.ZEROPAD digits
 			break
 		procedureDivisionPos += 1
 	file = inputFile[:procedureDivisionPos+1]
 	inputFile = inputFile[procedureDivisionPos+1:]
 	
 	line = ""
+	lineNo = -1
 	execFlag = False
 	for inputLine in inputFile:
+		lineNo = inputLine[:CONST.ZEROPAD]
+		inputLine = inputLine[CONST.ZEROPAD:]
+		
 		inputWords = inputLine.replace(".","").split()
+		
 		if not inputWords:
 			if line:
 				file.append(line)
 				line = ""
-			file.append(inputLine)
+			file.append(lineNo + inputLine)
 			continue
 		
 		if inputLine[0] != " " and len(inputWords) == 2 and inputWords[1] == "section":
 			if line:
 				file.append(line)
 				line = ""
-			file.append(inputWords[0]+".")
+			file.append(lineNo + inputWords[0]+".")
 			continue			
 		
 		if inputWords[0] == "exec":
 			execFlag = True
 		if "end-exec" in inputWords:
-			file.append(inputLine)
+			file.append(lineNo + inputLine)
 			execFlag = False
 			continue
 		if execFlag:
-			file.append(inputLine)
+			file.append(lineNo + inputLine)
 			continue
 			
 		if  keywords.isMainVerb(inputWords[0]) or inputLine[0] != " ":
 			if line:
 				file.append(line)
-			line = inputLine
+			line = lineNo + inputLine
 		else:
 			if line:
 				line = line + " " + inputLine.strip()
 			else:
-				line = inputLine
+				line = lineNo + inputLine
 	if line:
 		file.append(line)
 	
@@ -185,8 +190,8 @@ def isCobolProgram(inputFile):
 		if inputLine == "eject" or inputLine == "eject.":
 			continue
 			
-		if inputLine.find("identification ") != -1 or inputLine.find("id ") != -1:
-			if inputLine.find(" division") != -1:
+		if "identification " in inputLine or "id " in inputLine:
+			if " division" in inputLine:
 				return True
 		
 		if inputLine[:5] == "copy ":
@@ -225,7 +230,7 @@ def getIncludedCopybooks(inputFile):
 		if inputLineStrip[:5] == "copy " or inputLineStrip[:8] == "exec sql":
 			specialBlock = []
 			specialBlock.append(inputLine)
-			while lineNo < len(inputFile)-1 and (inputLine[6] != " " or (inputLine.find(".") == -1 and inputLine.lower().find("end-exec") == -1)):
+			while lineNo < len(inputFile)-1 and (inputLine[6] != " " or ("." not in inputLine and "end-exec" not in inputLine.lower())):
 				lineNo += 1
 				inputLine = inputFile[lineNo]
 				if len(inputLine) < 8:
