@@ -1,0 +1,8 @@
+generating tree
+- get called program name
+- skip empty branches
+- 
+
+
+generating flowchart
+- *all*
