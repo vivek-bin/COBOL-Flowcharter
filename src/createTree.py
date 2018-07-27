@@ -24,6 +24,9 @@ class ProcessingUnit:
 		if type(inputArg) is ProgramProcessingFile:
 			self.inputFile = inputArg
 
+	def peekStatement(self,lineNo):
+		return self.inputFile[lineNo]
+	
 	def peekCurrentStatement(self):
 		return self.inputFile[self.processedLines[-1]]
 	
@@ -80,7 +83,14 @@ def createChart(PU,ignorePeriod=False):
 		if lineDict["para"]:
 			programObj.append(ParaNode(PU,lineDict["para"]))
 		if lineDict["call"]:
-			programObj.append(CallNode(PU,lineDict["call"]))
+			callPgm = lineDict["call"]
+			if callPgm[0] in ["'",'"']:
+				programObj.append(CallNode(PU,callPgm))
+			else:
+				for lineNo in reversed(PU.processedLines):
+					processedLine = PU.peekStatement(lineNo)
+					processedDict = digestStatement(processedLine)
+					if 
 		if lineDict["goback"]:
 			programObj.append(EndNode(PU,lineDict["goback"]))
 		if lineDict["go to"]:
