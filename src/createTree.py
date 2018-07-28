@@ -83,14 +83,10 @@ def createChart(PU,ignorePeriod=False):
 		if lineDict["para"]:
 			programObj.append(ParaNode(PU,lineDict["para"]))
 		if lineDict["call"]:
-			callPgm = lineDict["call"]
-			if callPgm[0] in ["'",'"']:
-				programObj.append(CallNode(PU,callPgm))
-			else:
-				for lineNo in reversed(PU.processedLines):
-					processedLine = PU.peekStatement(lineNo)
-					processedDict = digestStatement(processedLine)
-					if 
+			calledProgram = getCalledProgram(PU,lineDict["call"])
+			if calledProgram == "'dfhei1'":
+				calledProgram = getCalledProgram(PU,lineDict["using"][1])
+			programObj.append(CallNode(PU,calledProgram))
 		if lineDict["goback"]:
 			programObj.append(EndNode(PU,lineDict["goback"]))
 		if lineDict["go to"]:
@@ -220,6 +216,34 @@ def skipStatementsGotoGoback(PU,ignorePeriod=False):
 		inputLine = PU.peekCurrentStatement()
 		lineDict = digestSentence(inputLine)
 	
+def getCalledProgram(PU,calledProgram):
+	if calledProgram[0] in ["'",'"'] or calledProgram.isdigit():
+		return calledProgram
+
+	for lineNo in reversed(PU.processedLines):
+		processedLine = PU.peekStatement(lineNo)
+		processedDict = digestSentence(processedLine)
+		if processedDict["move"]:
+			if calledProgram in processedDict["to"]:
+				calledProgram = processedDict["move"]
+				if calledProgram[0] in ["'",'"']:
+					break
+	
+	#get initial value(string in quotes) if not MOVE'd
+	if calledProgram[0] not in ["'",'"']:
+		calledProgram = " " + calledProgram + " "
+		
+		for inputLine in PU.inputFile.dataDivision:
+			if calledProgram in inputLine:
+				if " value " in inputLine:
+					valuePos = inputLine.find(" value ") + len(" value ")
+					calledProgram = inputLine[valuePos:-1]
+				break
+				
+		calledProgram = calledProgram.strip()
+
+	return calledProgram
+	
 def digestSentence(inputLine):
 	lineDict = {}
 	words = inputLine.replace("."," .").split()
@@ -227,6 +251,7 @@ def digestSentence(inputLine):
 	keyList = []
 	keyList.extends(["para","if","else","end-if",".","evaluate","when","end-evaluate","call","go to"])
 	keyList.extends(["perform","thru","until","end-perform","exec","end-exec","goback","return statement"])
+	keyList.extends(["using","move","to"])
 	for word in keyList:
 		lineDict[word] = False
 	
@@ -238,11 +263,21 @@ def digestSentence(inputLine):
 	if inputLine[0] != " " and lineDict["."]:
 		lineDict["para"] = words[0]	
 	
+	if lineDict["move"]:
+		toPos = words.index("to")
+		lineDict["move"] = words[toPos-1]
+		lineDict["to"] = words[toPos+1:]
+	
 	if words[0] = "go" and words[1] = "to":
 		lineDict["go to"] = words[2]
 	
 	if lineDict["call"]:
 		lineDict["call"] = words[1]
+		if "using" in words:
+			usingPos = words.index("using")
+			lineDict["using"] = []
+			for word in words[usingPos+1:]:
+				lineDict["using"].append(word)
 	
 	if lineDict["if"]:
 		lineDict["if"] = " ".join(words[1:])
