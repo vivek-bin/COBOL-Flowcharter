@@ -83,9 +83,9 @@ def createChart(PU,ignorePeriod=False):
 		if lineDict["para"]:
 			programObj.append(ParaNode(PU,lineDict["para"]))
 		if lineDict["call"]:
-			calledProgram = getCalledProgram(PU,lineDict["call"])
+			calledProgram = getFieldValue(PU,lineDict["call"])
 			if calledProgram == "'dfhei1'":
-				calledProgram = getCalledProgram(PU,lineDict["using"][1])
+				calledProgram = getFieldValue(PU,lineDict["using"][1])
 			programObj.append(CallNode(PU,calledProgram))
 		if lineDict["goback"]:
 			programObj.append(EndNode(PU,lineDict["goback"]))
@@ -216,33 +216,35 @@ def skipStatementsGotoGoback(PU,ignorePeriod=False):
 		inputLine = PU.peekCurrentStatement()
 		lineDict = digestSentence(inputLine)
 	
-def getCalledProgram(PU,calledProgram):
-	if calledProgram[0] in ["'",'"'] or calledProgram.isdigit():
-		return calledProgram
+def getFieldValue(PU,field):
+	if field[0] in ["'",'"'] or field.replace(".","").isdigit():
+		return field
 
 	for lineNo in reversed(PU.processedLines):
 		processedLine = PU.peekStatement(lineNo)
 		processedDict = digestSentence(processedLine)
 		if processedDict["move"]:
-			if calledProgram in processedDict["to"]:
-				calledProgram = processedDict["move"]
-				if calledProgram[0] in ["'",'"']:
+			if field in processedDict["to"]:
+				field = processedDict["move"]
+				if field[0] in ["'",'"'] or field.replace(".","").isdigit():
 					break
 	
-	#get initial value(string in quotes) if not MOVE'd
-	if calledProgram[0] not in ["'",'"']:
-		calledProgram = " " + calledProgram + " "
+	#get initial value(string in quotes,number) if not MOVE'd
+	if field[0] in ["'",'"'] or field.replace(".","").isdigit():
+		pass
+	else:
+		field = " " + field + " "
 		
 		for inputLine in PU.inputFile.dataDivision:
-			if calledProgram in inputLine:
+			if field in inputLine:
 				if " value " in inputLine:
 					valuePos = inputLine.find(" value ") + len(" value ")
-					calledProgram = inputLine[valuePos:-1]
+					field = inputLine[valuePos:-1]
 				break
 				
-		calledProgram = calledProgram.strip()
+		field = field.strip()
 
-	return calledProgram
+	return field
 	
 def digestSentence(inputLine):
 	lineDict = {}

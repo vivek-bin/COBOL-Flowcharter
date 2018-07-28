@@ -123,22 +123,25 @@ def processingFile(inputFile):
 
 def processingFileClean(inputFile):
 	file = []
-	dataDivisionPos = procedureDivisionPos = 0
-	for inputLine in inputFile:
-		if inputLine[CONST.ZEROPAD:len("data division")+CONST.ZEROPAD] == "data division":		#line count CONST.ZEROPAD digits
-			break
-		dataDivisionPos += 1
-	for inputLine in inputFile:
+	inputProcedureDivision = []
+	inputDataDivision = []
+
+	for i,inputLine in enumerate(inputFile):
 		if inputLine[CONST.ZEROPAD:len("procedure division")+CONST.ZEROPAD] == "procedure division":		#line count CONST.ZEROPAD digits
+			inputProcedureDivision = inputFile[i:]
+			inputFile = inputFile[:i]
 			break
-		procedureDivisionPos += 1
+			
+	for i,inputLine in enumerate(inputFile):
+		if inputLine[CONST.ZEROPAD:len("data division")+CONST.ZEROPAD] == "data division":		#line count CONST.ZEROPAD digits
+			inputDataDivision = inputFile[i:]
+			inputFile = inputFile[:i]
+			break
 	
-	file = inputFile[:dataDivisionPos+1]
-	inputFile = inputFile[dataDivisionPos+1:]
-	procedureDivisionPos -= dataDivisionPos+1
+	file = inputFile
 	
 	line = ""
-	for inputLine in inputFile[:procedureDivisionPos]:
+	for inputLine in inputDataDivision:
 		if line:
 			line += " " + inputLine[CONST.ZEROPAD:].strip()
 		else:
@@ -147,14 +150,10 @@ def processingFileClean(inputFile):
 		if inputLine[-1] == ".":
 			file.append(line)
 			line = ""
-	file.append(inputFile[procedureDivisionPos])
-	
-	inputFile = inputFile[procedureDivisionPos+1:]
-	
+
 	line = ""
-	lineNo = -1
 	execFlag = False
-	for inputLine in inputFile:
+	for inputLine in inputProcedureDivision:
 		lineNo = inputLine[:CONST.ZEROPAD]
 		inputLine = inputLine[CONST.ZEROPAD:]
 		
