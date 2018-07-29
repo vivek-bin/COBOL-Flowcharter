@@ -1,5 +1,10 @@
 import constants as CONST
+import zipfile as zip
+import os
+import time
 
+srczip = False
+inczip = False
 
 def loadFile(inputFileName,lib):
 	try:
@@ -35,17 +40,38 @@ def fileLength(inputFileName,lib):
 	f.close()
 	return i + 1
 	
+def fileLength2(inputFileName):
+	i = -1
+	f = srczip.read(inputFileName).split("\r\n")
+	inczip.writestr(inputFileName,"\r\n".join(f))
+	for i, l in enumerate(f):
+		pass
+	return i + 1
+	
 def t1():
-	import os
-	import time
 	startTime = time.time()
-	l=os.listdir(CONST.PROCESSING)
+	l=os.listdir(CONST.SRCELIB)
 	l1=[li.rstrip(".txt") for li in l] 
 	l2=l1[:5000]
 	maxl = -1
 	pname = ""
 	for n in l1:
-		len = fileLength(n,CONST.PROCESSING)
+		len = fileLength(n,CONST.SRCELIB)
+		if len > maxl:
+			pname = n
+			maxl = len
+	print pname
+	print maxl
+	print time.time() - startTime
+		
+def t2():
+	startTime = time.time()
+	
+	maxl = -1
+	pname = ""
+	l1 = srczip.namelist()[1:]
+	for n in l1:
+		len = fileLength2(n)
 		if len > maxl:
 			pname = n
 			maxl = len
@@ -53,9 +79,15 @@ def t1():
 	print maxl
 	print time.time() - startTime
 	
+#sT = time.time()
+#srczip = zip.ZipFile('D:\\CAAGIS flow tracker\\compressed\\COPYLIB.zip')
+#inczip = zip.ZipFile('D:\\CAAGIS flow tracker\\compressed\\COPYLIB2.zip',"w",zip.ZIP_DEFLATED)
+#t2()
+#srczip.close()
+#inczip.close()
+#print time.time() - sT
+	
 def t6():
-	import os
-	import time
 	startTime = time.time()
 	l=os.listdir(CONST.COPYLIB)
 	l1=[li.rstrip(".txt") for li in l] 

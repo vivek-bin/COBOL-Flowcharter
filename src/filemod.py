@@ -127,13 +127,13 @@ def processingFileClean(inputFile):
 	inputDataDivision = []
 
 	for i,inputLine in enumerate(inputFile):
-		if inputLine[CONST.ZEROPAD:len("procedure division")+CONST.ZEROPAD] == "procedure division":		#line count CONST.ZEROPAD digits
+		if inputLine[CONST.ZEROPAD:].startswith("procedure division"):		#line count CONST.ZEROPAD digits
 			inputProcedureDivision = inputFile[i:]
 			inputFile = inputFile[:i]
 			break
 			
 	for i,inputLine in enumerate(inputFile):
-		if inputLine[CONST.ZEROPAD:len("data division")+CONST.ZEROPAD] == "data division":		#line count CONST.ZEROPAD digits
+		if inputLine[CONST.ZEROPAD:].startswith("data division"):		#line count CONST.ZEROPAD digits
 			inputDataDivision = inputFile[i:]
 			inputFile = inputFile[:i]
 			break
