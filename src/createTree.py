@@ -23,15 +23,16 @@ class ProcessingUnit:
 		
 		if inputArg.__class__ is pfc.ProgramProcessingFile:
 			self.inputFile = inputArg
+			self.programCounter = 1
 
 	def peekStatement(self,lineNo):
-		return self.inputFile.inputFile[lineNo]
+		return self.inputFile.procedureDivision[lineNo]
 	
 	def peekCurrentStatement(self):
-		return self.inputFile.inputFile[self.processedLines[-1]]
+		return self.inputFile.procedureDivision[self.processedLines[-1]]
 	
 	def peekNextStatement(self):
-		return self.inputFile.inputFile[self.programCounter]
+		return self.inputFile.procedureDivision[self.programCounter]
 	
 	def stackSize():
 		return len(self.performEndStack)
@@ -384,4 +385,6 @@ def digestExecBlock(inputBlock):
 				execDict["query"] = queryWord
 				
 	return execDict
+
+
 

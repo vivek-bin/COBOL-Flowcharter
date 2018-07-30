@@ -14,7 +14,7 @@ def t1():
 	
 	fileaccess.openLib(fileaccess.PROCESSING)
 	
-	file1 = fileaccess.loadFile(fileaccess.PROCESSING,"MAN099FK")
+	file1 = fileaccess.loadFile(fileaccess.PROCESSING,"VIID246")
 	processingFile = pfc.ProgramProcessingFile(file1)
 		
 	PU = createTree.ProcessingUnit(processingFile)
