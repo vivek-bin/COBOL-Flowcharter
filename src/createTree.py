@@ -2,6 +2,7 @@ import constants as CONST
 import keywords
 import processingfileclass as pfc
 import nodes
+import time
 
 class ProcessingUnit:
 	def __init__(self,inputArg=False):
@@ -34,39 +35,37 @@ class ProcessingUnit:
 	def peekNextStatement(self):
 		return self.inputFile.procedureDivision[self.programCounter]
 	
-	def stackSize():
-		return len(self.performEndStack)
-	
 	def incrementProgramCounter(self):
 		self.paraReturn = False
+		
+		if self.processedLines:
+			if self.processedLines[-1] in self.inputFile.paraEnd.keys():
+				if self.inputFile.paraEnd[self.processedLines[-1]] in self.performEndStack:
+					stackIndex = self.performEndStack.index(self.inputFile.paraEnd[self.processedLines[-1]])
+					stackDepth = len(self.performEndStack) - stackIndex
+
+					for i in range(stackDepth):
+						self.performEndStack.pop()
+						self.paraStack.pop()
+						self.programCounter = self.performReturnStack.pop()
+					self.paraReturn = True
+		
 		self.processedLines.append(self.programCounter)
-		currentPara = self.inputFile.getCurrentPara(self.processedLines[-1])
-		if self.inputFile.paraEnd[currentPara] == self.processedLines[-1] and currentPara in self.performEndStack:
-			self.setPerformReturn(currentPara)
-			self.paraReturn = True
-		else:
-			self.programCounter += 1
+		self.programCounter += 1
 	
 	def getNextStatement(self):
 		self.incrementProgramCounter()
 		return self.peekCurrentStatement()
 	
 	def pushStack(self,performStart,performEnd):
+		time.sleep(0.5)
 		currentPara = self.inputFile.getCurrentPara(self.processedLines[-1])
 		self.paraStack.append(currentPara)
-		self.performReturnStack.append(self.programCounter)
+		self.performReturnStack.append(self.processedLines[-1])
 		self.performEndStack.append(performEnd)
 		
 		self.programCounter = self.inputFile.paraStart[performStart]
 
-	def setPerformReturn(self,para):
-		stackIndex = self.performEndStack.index(para)
-		
-		stackDepth = len(self.performEndStack) - stackIndex
-		for i in range(1,stackDepth):
-			self.performEndStack.pop()
-			self.paraStack.pop()
-			self.programCounter = self.performReturnStack.pop()
 	
 def createChart(PU,ignorePeriod=False):
 	programObj = []
@@ -78,7 +77,25 @@ def createChart(PU,ignorePeriod=False):
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
 		
+		if PU.paraReturn:
+			break
+		
 		lineCount += 1
+		
+		#exec nodes
+		if lineDict["exec"]:
+			execBlock = [inputLine]
+			while "end-exec" not in inputLine:
+				inputLine = PU.getNextStatement()
+				execBlock.append(inputLine)
+				
+			execDict = digestExecBlock(execBlock)
+			#lineDict["call"] = execDict["call"]
+			#lineDict["goback"] = execDict["goback"]
+			#add the exec block node
+			programObj.append(nodes.ExecNode(PU,execDict["type"]))
+			continue
+			
 		
 		#point nodes
 		if lineDict["para"]:
@@ -116,32 +133,21 @@ def createChart(PU,ignorePeriod=False):
 			
 			subChart = createChart(PU,ignorePeriod)
 			tempObj.branch = subChart
+			programObj.append(tempObj)
+			tempObj = False
 			
-			skipStatementsGotoGoback(PU,ignorePeriod)
 			inputLine = PU.peekCurrentStatement()
 			lineDict = digestSentence(inputLine)
-
-			if lineDict["return statement"]:
-				programObj.append(tempObj)
-				tempObj = False
-				if lineDict["."] and not ignorePeriod:
-					break
-		
-		#exec nodes
-		if lineDict["exec"]:
-			execBlock = [inputLine]
-			while "end-exec" not in inputLine:
-				inputLine = PU.getNextStatement()
-				execBlock.append(inputLine)
-				
-			execDict = digestExecBlock(execBlock)
-			#add the exec block node
-			programObj.append(nodes.ExecNode(PU,lineDict["type"]))
+			#print PU.programCounter 
+			
+			if lineDict["."] and not ignorePeriod:
+				break
 			continue
+		
 		
 		#check chart end
 		if lineDict["return statement"]:
-			if not (lineDict["."] and ignorePeriod):
+			if not (lineDict["return statement"] == "." and ignorePeriod):
 				break
 		
 		#branching statement
@@ -179,11 +185,11 @@ def createChart(PU,ignorePeriod=False):
 			
 		if lineDict["evaluate"]:
 			tempObj = nodes.EvaluateNode(PU,lineDict["evaluate"])
-			inputLine = PU.peekCurrentStatement()
+			inputLine = PU.getNextStatement()
 			lineDict = digestSentence(inputLine)
 		
 		while lineDict["when"]:
-			tempObj2 = nodes.WhenNode(lineDict["when"])
+			tempObj2 = nodes.WhenNode(PU,lineDict["when"])
 			while digestSentence(PU.peekNextStatement())["when"]:
 				inputLine = PU.getNextStatement()
 				lineDict = digestSentence(inputLine)
@@ -202,10 +208,8 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = False
 				if lineDict["."] and not ignorePeriod:
 					break
-			
 		
-		if PU.paraReturn:
-			break
+		
 	
 	if tempObj:
 		programObj.append(tempObj)

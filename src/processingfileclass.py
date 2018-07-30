@@ -60,6 +60,8 @@ class ProgramProcessingFile:
 			prevLineNo = lineNo
 		self.paraEnd[paraDeclarations[prevLineNo]] = len(self.procedureDivision) - 1
 		
+		self.paraEnd = {v:k for k,v in self.paraEnd.items()}
+		
 	def getCurrentPara(self,lineNo):
 		paraDeclarations = {v:k for k,v in self.paraStart.items()}
 		
