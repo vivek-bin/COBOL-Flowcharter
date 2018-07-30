@@ -1,5 +1,5 @@
 import constants as CONST
-import zipfile as zip
+import zipfile
 import os
 import time
 
@@ -80,8 +80,8 @@ def t2():
 	print time.time() - startTime
 	
 #sT = time.time()
-#srczip = zip.ZipFile('D:\\CAAGIS flow tracker\\compressed\\COPYLIB.zip')
-#inczip = zip.ZipFile('D:\\CAAGIS flow tracker\\compressed\\COPYLIB2.zip',"w",zip.ZIP_DEFLATED)
+#srczip = zipfile.ZipFile('D:\\CAAGIS flow tracker\\compressed\\COPYLIB.zip')
+#inczip = zipfile.ZipFile('D:\\CAAGIS flow tracker\\compressed\\COPYLIB2.zip',"w",zipfile.ZIP_DEFLATED)
 #t2()
 #srczip.close()
 #inczip.close()

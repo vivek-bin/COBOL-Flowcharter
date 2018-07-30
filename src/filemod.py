@@ -1,27 +1,6 @@
 import constants as CONST
 import keywords
-
-def writeFile(inputFileName,lib,inputList):
-	try:
-		inputFile = open(lib+inputFileName+".txt","w")
-		inputFile.writelines( "%s\n" % row for row in inputList)
-		inputFile.close()
-	except IOError:
-		print ("couldnt write file")
-	
-def loadFile(inputFileName,lib):
-	f = []
-	try:
-		inputFile = open(lib+inputFileName+".txt")
-		
-		if lib in (CONST.SRCELIB,CONST.COPYLIB,CONST.INCLUDE):
-			f = [l[:72].rstrip() for l in inputFile]
-		else:
-			f = [l.rstrip() for l in inputFile]
-		inputFile.close()
-	except IOError:
-		pass
-	return f
+import fileaccess
 
 def expandFile(inputFile):
 	file = []
@@ -69,9 +48,9 @@ def expandFile(inputFile):
 				file.append(specialLine)
 				
 			if expandFlag:
-				copyFile = loadFile(copyFileName,CONST.COPYLIB)
+				copyFile = fileaccess.loadFile(fileaccess.COPY,copyFileName)
 				if not copyFile:
-					copyFile = loadFile(copyFileName,CONST.INCLUDE)
+					copyFile = fileaccess.loadFile(fileaccess.INC,copyFileName)
 				
 				if "replacing" in inputLine:
 					inputLine = inputLine[inputLine.find("replacing") + len("replacing") + 1:-1].strip()
@@ -220,17 +199,19 @@ def isCobolProgram(inputFile):
 		return False
 	return False
 
-def writeProcessingExpand(component):
-	src = loadFile(component,CONST.SRCELIB)
+def writeProcessingExpand(componentName):
+	src = fileaccess.loadFile(fileaccess.SRCE,componentName)
 	if not isCobolProgram(src):
-		if component[2:4].lower() != "ms":
-			print ("not COBOL:" + component)
-		writeFile(component,CONST.EXPANDED,src)
-		#writeFile(component,CONST.PROCESSING,src)
+		if componentName[2:4].lower() != "ms":
+			print ("not COBOL:" + componentName)
+		fileaccess.writeFile(fileaccess.EXPANDED,componentName,src)
+		#fileaccess.writeFile(fileaccess.PROCESSING,componentName,src)
 	else:
-		expandSrce = expandFile(src)
-		writeFile(component,CONST.EXPANDED,expandSrce)
-		writeFile(component,CONST.PROCESSING,processingFileClean(processingFile(expandSrce)))
+		expandedSrc = expandFile(src)
+		processingSrc = processingFile(expandedSrc)
+		processingSrc = processingFileClean(processingSrc)
+		fileaccess.writeFile(fileaccess.EXPANDED,componentName,expandedSrc)
+		fileaccess.writeFile(fileaccess.PROCESSING,componentName,processingSrc)
 	
 def getIncludedCopybooks(inputFile):
 	file = []
@@ -275,20 +256,37 @@ def getIncludedCopybooks(inputFile):
 		
 	return file
 	
-def writeAllProcessingExpand(count=999999):
+def writeAllProcessingExpand(start=0,end=999999):
 	import os
 	import time
 	startTime = time.time()
-	list = os.listdir(CONST.SRCELIB)
-	list = [fileName.rstrip(".txt") for fileName in list]
-	processingList = list[:count]
-		
+	
+	fileaccess.openLib(fileaccess.SRCE)
+	fileaccess.openLib(fileaccess.COPY)
+	fileaccess.openLib(fileaccess.INC)
+	fileaccess.openLib(fileaccess.EXPANDED,"w")
+	fileaccess.openLib(fileaccess.PROCESSING,"w")
+	
+	
+	list = fileaccess.fileListLib(fileaccess.SRCE)
+	processingList = list[start:end]
+	
 	for fileName in processingList:
-		print (fileName)
+		#print (fileName)
 		writeProcessingExpand(fileName)
-	print (time.time() - startTime)
+		
+		
+	fileaccess.closeLib(fileaccess.SRCE)
+	fileaccess.closeLib(fileaccess.COPY)
+	fileaccess.closeLib(fileaccess.INC)
+	fileaccess.closeLib(fileaccess.EXPANDED)
+	fileaccess.closeLib(fileaccess.PROCESSING)
 
-def t1():
-	writeAllProcessingExpand(100)
+		
+	print (time.time() - startTime)
+	
+	
+def t1(start=0,end=99):
+	writeAllProcessingExpand(start,end)
 	
 	

@@ -1,14 +1,6 @@
 import constants as CONST
 
 class ProgramProcessingFile:
-	def loadFile(self,inputFileName):
-		try:
-			iFile = open(CONST.PROCESSING+inputFileName+".txt")
-			self.inputFile = [l.rstrip() for l in iFile]
-			iFile.close()
-		except IOError:
-			self.inputFile = []
-
 	def searchFile(self,search):
 		i = 0
 		for inputLine in self.inputFile:
@@ -76,7 +68,7 @@ class ProgramProcessingFile:
 				return paraDeclarations[i]
 		return ""
 	
-	def __init__(self,inputFile=[]):
+	def __init__(self,inputFile):
 		self.inputFile = []
 		self.inputFileLineNo = []
 		self.identificationDivision = []
@@ -86,10 +78,7 @@ class ProgramProcessingFile:
 		self.paraStart = {}
 		self.paraEnd = {}
 		
-		if type(inputFile) == type(""):
-			self.loadFile(inputFile)
-		else:
-			self.inputFile = inputFile 
+		self.inputFile = inputFile 
 		
 		self.inputFileLineNo = [inputLine[:CONST.ZEROPAD] for inputLine in self.inputFile]
 		self.inputFile = [inputLine[CONST.ZEROPAD:] for inputLine in self.inputFile]

@@ -1,17 +1,7 @@
 import constants as CONST
+import fileaccess
 allKeyWords = []
 mainVerbs = []
-
-def loadDATA(inputFileName):
-	f = []
-	try:
-		iFile = open(CONST.DATA+inputFileName+".txt")
-
-		f = [l.rstrip() for l in iFile]
-		iFile.close()
-	except IOError:
-		f = []
-	return f
 
 def extractKeywords(inputLine):
 	if inputLine[-1] == ".":
@@ -39,5 +29,5 @@ def isMainVerb(word):
 	else:
 		return False
 
-allKeyWords = loadDATA("Keywords")
-mainVerbs = loadDATA("MainKeywords")
+allKeyWords = fileaccess.loadDATA("Keywords")
+mainVerbs = fileaccess.loadDATA("MainKeywords")
