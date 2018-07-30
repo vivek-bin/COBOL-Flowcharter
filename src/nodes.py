@@ -37,6 +37,11 @@ class NonLoopNode(Node):
 		Node.__init__(self,PU)
 		self.branch = []
 	
+class ParaNode(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.paraName = operand
+		
 class CallNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)

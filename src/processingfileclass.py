@@ -53,7 +53,7 @@ class ProgramProcessingFile:
 				
 		paraDeclarations = {v:k for k,v in self.paraStart.items()}
 		
-		temp = sorted(paraDeclarations.keys)
+		temp = sorted(paraDeclarations.keys())
 		prevLineNo = temp[0]
 		for lineNo in temp[1:]:
 			self.paraEnd[paraDeclarations[prevLineNo]] = lineNo - 1
@@ -61,7 +61,7 @@ class ProgramProcessingFile:
 		self.paraEnd[paraDeclarations[prevLineNo]] = len(self.procedureDivision) - 1
 		
 	def getCurrentPara(self,lineNo):
-		paraDeclarations = {v:k for k,v in self.paraPosition.items()}
+		paraDeclarations = {v:k for k,v in self.paraStart.items()}
 		
 		for i in sorted(paraDeclarations.keys(),reverse=True):
 			if i <= lineNo:

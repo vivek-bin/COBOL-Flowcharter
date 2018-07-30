@@ -13,7 +13,7 @@ class ProcessingUnit:
 		self.inputFile = []
 		self.paraReturn = False
 
-		if type(inputArg) is ProcessingUnit:
+		if inputArg.__class__ is ProcessingUnit:
 			self.performReturnStack = inputArg.performReturnStack[:]
 			self.performEndStack = inputArg.performEndStack[:]
 			self.paraStack = inputArg.paraStack[:]
@@ -21,24 +21,24 @@ class ProcessingUnit:
 			self.programCounter = inputArg.programCounter - 0
 			self.inputFile = inputArg.inputFile
 		
-		if type(inputArg) is ProgramProcessingFile:
+		if inputArg.__class__ is pfc.ProgramProcessingFile:
 			self.inputFile = inputArg
 
 	def peekStatement(self,lineNo):
-		return self.inputFile[lineNo]
+		return self.inputFile.inputFile[lineNo]
 	
 	def peekCurrentStatement(self):
-		return self.inputFile[self.processedLines[-1]]
+		return self.inputFile.inputFile[self.processedLines[-1]]
 	
 	def peekNextStatement(self):
-		return self.inputFile[self.programCounter]
+		return self.inputFile.inputFile[self.programCounter]
 	
 	def stackSize():
 		return len(self.performEndStack)
 	
 	def incrementProgramCounter(self):
 		self.paraReturn = False
-		self.processedLines.append(programCounter)
+		self.processedLines.append(self.programCounter)
 		currentPara = self.inputFile.getCurrentPara(self.processedLines[-1])
 		if self.inputFile.paraEnd[currentPara] == self.processedLines[-1] and currentPara in self.performEndStack:
 			self.setPerformReturn(currentPara)
@@ -52,7 +52,7 @@ class ProcessingUnit:
 	
 	def pushStack(self,performStart,performEnd):
 		currentPara = self.inputFile.getCurrentPara(self.processedLines[-1])
-		self.paraStack.append(self.currentPara)
+		self.paraStack.append(currentPara)
 		self.performReturnStack.append(self.programCounter)
 		self.performEndStack.append(performEnd)
 		
@@ -81,16 +81,16 @@ def createChart(PU,ignorePeriod=False):
 		
 		#point nodes
 		if lineDict["para"]:
-			programObj.append(ParaNode(PU,lineDict["para"]))
+			programObj.append(nodes.ParaNode(PU,lineDict["para"]))
 		if lineDict["call"]:
 			calledProgram = getFieldValue(PU,lineDict["call"])
 			if calledProgram == "'dfhei1'":
 				calledProgram = getFieldValue(PU,lineDict["using"][1])
-			programObj.append(CallNode(PU,calledProgram))
+			programObj.append(nodes.CallNode(PU,calledProgram))
 		if lineDict["goback"]:
-			programObj.append(EndNode(PU,lineDict["goback"]))
+			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
 		if lineDict["go to"]:
-			tempObj = GoToNode(PU,lineDict["go to"])
+			tempObj = nodes.GoToNode(PU,lineDict["go to"])
 			if lineDict["go to"] not in PU.performEndStack:
 				subChart = createChart(ProcessingUnit(PU),True)
 			programObj.append(tempObj)
@@ -99,9 +99,9 @@ def createChart(PU,ignorePeriod=False):
 		#perform nodes
 		if lineDict["perform"]:
 			if lineDict["until"]:
-				tempObj = LoopNode(PU,lineDict["until"])
+				tempObj = nodes.LoopNode(PU,lineDict["until"])
 			else:
-				tempObj = NonLoopNode(PU)
+				tempObj = nodes.NonLoopNode(PU)
 
 			if type(lineDict["perform"]) is str:
 				performStart = lineDict["perform"]
@@ -134,7 +134,7 @@ def createChart(PU,ignorePeriod=False):
 				
 			execDict = digestExecBlock(execBlock)
 			#add the exec block node
-			programObj.append(ExecNode(PU,lineDict["type"]))
+			programObj.append(nodes.ExecNode(PU,lineDict["type"]))
 
 		
 		#check chart end
@@ -144,7 +144,7 @@ def createChart(PU,ignorePeriod=False):
 		
 		#branching statement
 		if lineDict["if"]:
-			tempObj = IfNode(PU,lineDict["if"])
+			tempObj = nodes.IfNode(PU,lineDict["if"])
 			
 			subChart = createChart(PU)
 			tempObj.trueBranch = subChart
@@ -176,10 +176,10 @@ def createChart(PU,ignorePeriod=False):
 			
 			
 		if lineDict["evaluate"]:
-			tempObj = EvaluateNode(PU,lineDict["evaluate"])
+			tempObj = nodes.EvaluateNode(PU,lineDict["evaluate"])
 		
 		while lineDict["when"]:
-			tempObj2 = WhenNode(lineDict["when"])
+			tempObj2 = nodes.WhenNode(lineDict["when"])
 			while digestSentence(PU.peekNextStatement())["when"]:
 				inputLine = PU.getNextStatement()
 				lineDict = digestSentence(inputLine)
@@ -251,9 +251,9 @@ def digestSentence(inputLine):
 	words = inputLine.replace("."," .").split()
 	
 	keyList = []
-	keyList.extends(["para","if","else","end-if",".","evaluate","when","end-evaluate","call","go to"])
-	keyList.extends(["perform","thru","until","end-perform","exec","end-exec","goback","return statement"])
-	keyList.extends(["using","move","to"])
+	keyList.extend(["para","if","else","end-if",".","evaluate","when","end-evaluate","call","go to"])
+	keyList.extend(["perform","thru","until","end-perform","exec","end-exec","goback","return statement"])
+	keyList.extend(["using","move","to"])
 	for word in keyList:
 		lineDict[word] = False
 	
@@ -270,7 +270,7 @@ def digestSentence(inputLine):
 		lineDict["move"] = words[toPos-1]
 		lineDict["to"] = words[toPos+1:]
 	
-	if words[0] = "go" and words[1] = "to":
+	if words[0] == "go" and words[1] == "to":
 		lineDict["go to"] = words[2]
 	
 	if lineDict["call"]:
@@ -324,9 +324,9 @@ def digestSentence(inputLine):
 		if untilPos and not varyingPos:
 			lineDict["until"] = " ".join(words[untilPos+1:])
 	
-	if words[0] = "stop" and words[1] = "run":
+	if words[0] == "stop" and words[1] == "run":
 		lineDict["goback"] = True
-	if words[0] = "exit" and words[1] = "program":
+	if words[0] == "exit" and words[1] == "program":
 		lineDict["goback"] = True
 	
 	
@@ -343,7 +343,7 @@ def digestExecBlock(inputBlock):
 	words = inputLine.split()
 	
 	keyList = []
-	keyList.extends(["type","call","goback","cursor","query","table","."])
+	keyList.extend(["type","call","goback","cursor","query","table","."])
 	for dictKey in keyList:
 		execDict[dictKey] = False
 
