@@ -23,7 +23,7 @@ class ProcessingUnit:
 		
 		if inputArg.__class__ is pfc.ProgramProcessingFile:
 			self.inputFile = inputArg
-			self.programCounter = 1
+			self.programCounter = 0
 
 	def peekStatement(self,lineNo):
 		return self.inputFile.procedureDivision[lineNo]
@@ -104,7 +104,7 @@ def createChart(PU,ignorePeriod=False):
 			else:
 				tempObj = nodes.NonLoopNode(PU)
 
-			if type(lineDict["perform"]) is str:
+			if lineDict["perform"] is not True:
 				performStart = lineDict["perform"]
 				performEnd = lineDict["perform"]
 				if lineDict["thru"]:
@@ -115,6 +115,7 @@ def createChart(PU,ignorePeriod=False):
 				ignorePeriod = False
 			
 			subChart = createChart(PU,ignorePeriod)
+			tempObj.branch = subChart
 			
 			skipStatementsGotoGoback(PU,ignorePeriod)
 			inputLine = PU.peekCurrentStatement()
@@ -136,7 +137,7 @@ def createChart(PU,ignorePeriod=False):
 			execDict = digestExecBlock(execBlock)
 			#add the exec block node
 			programObj.append(nodes.ExecNode(PU,lineDict["type"]))
-
+			continue
 		
 		#check chart end
 		if lineDict["return statement"]:
@@ -178,6 +179,8 @@ def createChart(PU,ignorePeriod=False):
 			
 		if lineDict["evaluate"]:
 			tempObj = nodes.EvaluateNode(PU,lineDict["evaluate"])
+			inputLine = PU.peekCurrentStatement()
+			lineDict = digestSentence(inputLine)
 		
 		while lineDict["when"]:
 			tempObj2 = nodes.WhenNode(lineDict["when"])
@@ -206,7 +209,14 @@ def createChart(PU,ignorePeriod=False):
 	
 	if tempObj:
 		programObj.append(tempObj)
-
+	
+	emptyFlag = True
+	for tempObj in programObj:
+		if not tempObj.isEmpty():
+			emptyFlag = False
+	#if emptyFlag:
+	#	programObj = []
+	
 	return programObj
 	
 def skipStatementsGotoGoback(PU,ignorePeriod=False):

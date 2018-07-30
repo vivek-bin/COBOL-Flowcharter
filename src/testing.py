@@ -23,6 +23,6 @@ def t1():
 	
 	print (time.time() - startTime)
 	
-	return fChart
+	return PU, fChart
 	
-f = t1()
+PU, f = t1()
