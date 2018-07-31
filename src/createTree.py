@@ -99,8 +99,18 @@ def createChart(PU,ignorePeriod=False):
 			programObj.append(nodes.ExecNode(PU,execDict["type"]))
 			if "." in lineDict and not ignorePeriod:
 				break
-			continue
-			
+		
+		#returnable statements
+		if "goback" in lineDict:
+			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
+		if "go to" in lineDict:
+			tempObj = nodes.GoToNode(PU,lineDict["go to"])
+			if lineDict["go to"] not in PU.performEndStack:
+				PU.programCounter = PU.inputFile.paraStart[lineDict["go to"]]
+				subChart = createChart(ProcessingUnit(PU),True)
+			programObj.append(tempObj)
+			tempObj = False
+		
 		
 		#point nodes
 		if "para" in lineDict:
@@ -110,14 +120,6 @@ def createChart(PU,ignorePeriod=False):
 			if calledProgram == "'dfhei1'":
 				calledProgram = getFieldValue(PU,lineDict["using"][1])
 			programObj.append(nodes.CallNode(PU,calledProgram))
-		if "goback" in lineDict:
-			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
-		if "go to" in lineDict:
-			tempObj = nodes.GoToNode(PU,lineDict["go to"])
-			if lineDict["go to"] not in PU.performEndStack:
-				subChart = createChart(ProcessingUnit(PU),True)
-			programObj.append(tempObj)
-			tempObj = False
 		
 		#perform nodes
 		if "perform" in lineDict:
@@ -155,12 +157,16 @@ def createChart(PU,ignorePeriod=False):
 			if not (lineDict["return statement"] == "." and ignorePeriod):
 				break
 		
-		#branching statement
-		if "if" in lineDict:
-			tempObj = nodes.IfNode(PU,lineDict["if"])
-			
+		#branching statements
+		if "if" in lineDict or "else" in lineDict:
+			ifFlag = "if" in lineDict
+			if ifFlag:
+				tempObj = nodes.IfNode(PU,lineDict["if"])
 			subChart = createChart(PU)
-			tempObj.trueBranch = subChart
+			if ifFlag:
+				tempObj.trueBranch = subChart
+			else:
+				tempObj.falseBranch = subChart
 			
 			skipStatementsGotoGoback(PU)
 			inputLine = PU.peekCurrentStatement()
@@ -172,23 +178,7 @@ def createChart(PU,ignorePeriod=False):
 				if "." in lineDict and not ignorePeriod:
 					break
 			continue
-			
-			
-		if "else" in lineDict:
-			subChart = createChart(PU)
-			tempObj.falseBranch = subChart
-			
-			skipStatementsGotoGoback(PU)
-			inputLine = PU.peekCurrentStatement()
-			lineDict = digestSentence(inputLine)
-			
-			if lineDict["return statement"] in ["end-if","."]:
-				programObj.append(tempObj)
-				tempObj = False
-				if "." in lineDict and not ignorePeriod:
-					break
-			continue
-			
+	
 			
 		if "evaluate" in lineDict:
 			tempObj = nodes.EvaluateNode(PU,lineDict["evaluate"])
@@ -210,12 +200,12 @@ def createChart(PU,ignorePeriod=False):
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
 					
-				if lineDict["return statement"] in ["end-evaluate","."]:
-					programObj.append(tempObj)
-					tempObj = False
-					if "." in lineDict and not ignorePeriod:
-						break
-				continue
+			if lineDict["return statement"] in ["end-evaluate","."]:
+				programObj.append(tempObj)
+				tempObj = False
+				if "." in lineDict and not ignorePeriod:
+					break
+			continue
 		
 	
 	if tempObj:
