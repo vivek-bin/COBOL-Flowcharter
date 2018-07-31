@@ -12,6 +12,7 @@ class ProcessingUnit:
 		self.processedLines = []		#list of all lines processed
 		self.programCounter = 0			#points to next sentence to be executed
 		self.inputFile = []
+		self.paraCall = False
 		self.paraReturn = False
 
 		if inputArg.__class__ is ProcessingUnit:
@@ -38,7 +39,7 @@ class ProcessingUnit:
 	def incrementProgramCounter(self):
 		self.paraReturn = False
 		
-		if self.processedLines:
+		if self.processedLines and not self.paraCall:
 			if self.processedLines[-1] in self.inputFile.paraEnd.keys():
 				if self.inputFile.paraEnd[self.processedLines[-1]] in self.performEndStack:
 					stackIndex = self.performEndStack.index(self.inputFile.paraEnd[self.processedLines[-1]])
@@ -50,6 +51,7 @@ class ProcessingUnit:
 						self.programCounter = self.performReturnStack.pop()
 					self.paraReturn = True
 		
+		self.paraCall = False
 		self.processedLines.append(self.programCounter)
 		self.programCounter += 1
 	
@@ -65,6 +67,8 @@ class ProcessingUnit:
 		self.performEndStack.append(performEnd)
 		
 		self.programCounter = self.inputFile.paraStart[performStart]
+		self.paraCall = True
+	
 	
 def createChart(PU,ignorePeriod=False):
 	programObj = []
@@ -93,6 +97,8 @@ def createChart(PU,ignorePeriod=False):
 			#lineDict["goback"] = execDict["goback"]
 			#add the exec block node
 			programObj.append(nodes.ExecNode(PU,execDict["type"]))
+			if "." in lineDict and not ignorePeriod:
+				break
 			continue
 			
 		
@@ -165,6 +171,7 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = False
 				if "." in lineDict and not ignorePeriod:
 					break
+			continue
 			
 			
 		if "else" in lineDict:
@@ -180,6 +187,7 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = False
 				if "." in lineDict and not ignorePeriod:
 					break
+			continue
 			
 			
 		if "evaluate" in lineDict:
@@ -187,27 +195,27 @@ def createChart(PU,ignorePeriod=False):
 			inputLine = PU.getNextStatement()
 			lineDict = digestSentence(inputLine)
 		
-		while "when" in lineDict:
-			tempObj2 = nodes.WhenNode(PU,lineDict["when"])
-			while "when" in digestSentence(PU.peekNextStatement()):
-				inputLine = PU.getNextStatement()
-				lineDict = digestSentence(inputLine)
-				tempObj2.addCondition(lineDict["when"])
-			
-			subChart = createChart(PU)
-			tempObj2.branch = subChart
-			tempObj.whenList.append(tempObj2)
-			
-			skipStatementsGotoGoback(PU)
-			inputLine = PU.peekCurrentStatement()
-			lineDict = digestSentence(inputLine)
+			while "when" in lineDict:
+				tempObj2 = nodes.WhenNode(PU,lineDict["when"])
+				while "when" in digestSentence(PU.peekNextStatement()):
+					inputLine = PU.getNextStatement()
+					lineDict = digestSentence(inputLine)
+					tempObj2.addCondition(lineDict["when"])
 				
-			if lineDict["return statement"] in ["end-evaluate","."]:
-				programObj.append(tempObj)
-				tempObj = False
-				if "." in lineDict and not ignorePeriod:
-					break
-		
+				subChart = createChart(PU)
+				tempObj2.branch = subChart
+				tempObj.whenList.append(tempObj2)
+				
+				skipStatementsGotoGoback(PU)
+				inputLine = PU.peekCurrentStatement()
+				lineDict = digestSentence(inputLine)
+					
+				if lineDict["return statement"] in ["end-evaluate","."]:
+					programObj.append(tempObj)
+					tempObj = False
+					if "." in lineDict and not ignorePeriod:
+						break
+				continue
 		
 	
 	if tempObj:
@@ -237,7 +245,7 @@ def getFieldValue(PU,field):
 	for lineNo in reversed(PU.processedLines):
 		processedLine = PU.peekStatement(lineNo)
 		processedDict = digestSentence(processedLine)
-		if processedDict["move"]:
+		if "move" in processedDict:
 			if field in processedDict["to"]:
 				field = processedDict["move"]
 				if field[0] in ["'",'"'] or field.replace(".","").isdigit():

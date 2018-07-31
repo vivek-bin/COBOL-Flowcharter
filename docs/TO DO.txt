@@ -1,6 +1,6 @@
 generating tree
-- get called program name
 - skip empty branches
+- handle/test go to's
 - 
 
 

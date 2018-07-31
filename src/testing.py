@@ -3,26 +3,31 @@ import processingfileclass as pfc
 import createTree
 import fileaccess
 import os
-
 import time
 
-def t1():
-	import os
-	import time
-	startTime = time.time()
+def generateChart(file):
 	fChart = []
 	
-	fileaccess.openLib(fileaccess.PROCESSING)
-	
-	file1 = fileaccess.loadFile(fileaccess.PROCESSING,"VIIDB48")
-	#file1 = fileaccess.loadDATA("test")
-	processingFile = pfc.ProgramProcessingFile(file1)
-	
+	processingFile = pfc.ProgramProcessingFile(file)
 	PU = createTree.ProcessingUnit(processingFile)
 	
 	fChart = createTree.createChart(PU,True)
-	print (time.time() - startTime)
 	
 	return PU, fChart
 	
+	
+def t1()
+	startTime = time.time()
+	fileaccess.openLib(fileaccess.PROCESSING)
+	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
+	
+	file = fileaccess.loadFile(fileaccess.PROCESSING,"VIB3251")
+	PU, fChart = generateChart(file)
+	
+	fileaccess.closeLib(fileaccess.PROCESSING)
+	
+	print (time.time() - startTime)
+	return PU, fChart
+	
+
 PU, f = t1()
