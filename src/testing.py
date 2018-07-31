@@ -17,10 +17,8 @@ def t1():
 	file1 = fileaccess.loadFile(fileaccess.PROCESSING,"VIIDB48")
 	#file1 = fileaccess.loadDATA("test")
 	processingFile = pfc.ProgramProcessingFile(file1)
-	print (time.time() - startTime)
 	
 	PU = createTree.ProcessingUnit(processingFile)
-	print (time.time() - startTime)
 	
 	fChart = createTree.createChart(PU,True)
 	print (time.time() - startTime)

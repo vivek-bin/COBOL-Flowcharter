@@ -58,7 +58,7 @@ class ProcessingUnit:
 		return self.peekCurrentStatement()
 	
 	def pushStack(self,performStart,performEnd):
-		time.sleep(0.5)
+		#time.sleep(0.5)
 		currentPara = self.inputFile.getCurrentPara(self.processedLines[-1])
 		self.paraStack.append(currentPara)
 		self.performReturnStack.append(self.processedLines[-1])
@@ -82,7 +82,7 @@ def createChart(PU,ignorePeriod=False):
 		lineCount += 1
 		
 		#exec nodes
-		if lineDict["exec"]:
+		if "exec" in lineDict:
 			execBlock = [inputLine]
 			while "end-exec" not in inputLine:
 				inputLine = PU.getNextStatement()
@@ -97,16 +97,16 @@ def createChart(PU,ignorePeriod=False):
 			
 		
 		#point nodes
-		if lineDict["para"]:
+		if "para" in lineDict:
 			programObj.append(nodes.ParaNode(PU,lineDict["para"]))
-		if lineDict["call"]:
+		if "call" in lineDict:
 			calledProgram = getFieldValue(PU,lineDict["call"])
 			if calledProgram == "'dfhei1'":
 				calledProgram = getFieldValue(PU,lineDict["using"][1])
 			programObj.append(nodes.CallNode(PU,calledProgram))
-		if lineDict["goback"]:
+		if "goback" in lineDict:
 			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
-		if lineDict["go to"]:
+		if "go to" in lineDict:
 			tempObj = nodes.GoToNode(PU,lineDict["go to"])
 			if lineDict["go to"] not in PU.performEndStack:
 				subChart = createChart(ProcessingUnit(PU),True)
@@ -114,8 +114,8 @@ def createChart(PU,ignorePeriod=False):
 			tempObj = False
 		
 		#perform nodes
-		if lineDict["perform"]:
-			if lineDict["until"]:
+		if "perform" in lineDict:
+			if "until" in lineDict:
 				tempObj = nodes.LoopNode(PU,lineDict["until"])
 			else:
 				tempObj = nodes.NonLoopNode(PU)
@@ -123,7 +123,7 @@ def createChart(PU,ignorePeriod=False):
 			if lineDict["perform"] is not True:
 				performStart = lineDict["perform"]
 				performEnd = lineDict["perform"]
-				if lineDict["thru"]:
+				if "thru" in lineDict:
 					performEnd = lineDict["thru"]
 				PU.pushStack(performStart,performEnd)
 				ignorePeriod = True
@@ -139,18 +139,18 @@ def createChart(PU,ignorePeriod=False):
 			lineDict = digestSentence(inputLine)
 			#print PU.programCounter 
 			
-			if lineDict["."] and not ignorePeriod:
+			if "." in lineDict and not ignorePeriod:
 				break
 			continue
 		
 		
 		#check chart end
-		if lineDict["return statement"]:
+		if "return statement" in lineDict:
 			if not (lineDict["return statement"] == "." and ignorePeriod):
 				break
 		
 		#branching statement
-		if lineDict["if"]:
+		if "if" in lineDict:
 			tempObj = nodes.IfNode(PU,lineDict["if"])
 			
 			subChart = createChart(PU)
@@ -163,11 +163,11 @@ def createChart(PU,ignorePeriod=False):
 			if lineDict["return statement"] in ["end-if","."]:
 				programObj.append(tempObj)
 				tempObj = False
-				if lineDict["."] and not ignorePeriod:
+				if "." in lineDict and not ignorePeriod:
 					break
 			
 			
-		if lineDict["else"]:
+		if "else" in lineDict:
 			subChart = createChart(PU)
 			tempObj.falseBranch = subChart
 			
@@ -178,18 +178,18 @@ def createChart(PU,ignorePeriod=False):
 			if lineDict["return statement"] in ["end-if","."]:
 				programObj.append(tempObj)
 				tempObj = False
-				if lineDict["."] and not ignorePeriod:
+				if "." in lineDict and not ignorePeriod:
 					break
 			
 			
-		if lineDict["evaluate"]:
+		if "evaluate" in lineDict:
 			tempObj = nodes.EvaluateNode(PU,lineDict["evaluate"])
 			inputLine = PU.getNextStatement()
 			lineDict = digestSentence(inputLine)
 		
-		while lineDict["when"]:
+		while "when" in lineDict:
 			tempObj2 = nodes.WhenNode(PU,lineDict["when"])
-			while digestSentence(PU.peekNextStatement())["when"]:
+			while "when" in digestSentence(PU.peekNextStatement()):
 				inputLine = PU.getNextStatement()
 				lineDict = digestSentence(inputLine)
 				tempObj2.addCondition(lineDict["when"])
@@ -205,7 +205,7 @@ def createChart(PU,ignorePeriod=False):
 			if lineDict["return statement"] in ["end-evaluate","."]:
 				programObj.append(tempObj)
 				tempObj = False
-				if lineDict["."] and not ignorePeriod:
+				if "." in lineDict and not ignorePeriod:
 					break
 		
 		
@@ -225,7 +225,7 @@ def createChart(PU,ignorePeriod=False):
 def skipStatementsGotoGoback(PU,ignorePeriod=False):
 	inputLine = PU.peekCurrentStatement()
 	lineDict = digestSentence(inputLine)
-	while (not lineDict["."] or ignorePeriod) and (lineDict["go to"] or lineDict["goback"]):
+	while ("." not in lineDict or ignorePeriod) and ("go to" in lineDict or "goback" in lineDict):
 		createChart(PU)
 		inputLine = PU.peekCurrentStatement()
 		lineDict = digestSentence(inputLine)
@@ -264,22 +264,22 @@ def digestSentence(inputLine):
 	lineDict = {}
 	words = inputLine.replace("."," .").split()
 	
-	keyList = []
-	keyList.extend(["para","if","else","end-if",".","evaluate","when","end-evaluate","call","go to"])
-	keyList.extend(["perform","thru","until","end-perform","exec","end-exec","goback","return statement"])
-	keyList.extend(["using","move","to"])
-	for word in keyList:
-		lineDict[word] = False
+	#keyList = []
+	#keyList.extend(["para","if","else","end-if",".","evaluate","when","end-evaluate","call","go to"])
+	#keyList.extend(["perform","thru","until","end-perform","exec","end-exec","goback","return statement"])
+	#keyList.extend(["using","move","to"])
+	#for word in keyList:
+	#	lineDict[word] = False
 	
 	lineDict[0] = words[0]
 	lineDict[words[0]] = True
 	if "." in words:
 		lineDict["."] = True
 		
-	if inputLine[0] != " " and lineDict["."]:
+	if inputLine[0] != " " and "." in lineDict:
 		lineDict["para"] = words[0]	
 	
-	if lineDict["move"]:
+	if "move" in lineDict:
 		toPos = words.index("to")
 		lineDict["move"] = words[toPos-1]
 		lineDict["to"] = words[toPos+1:]
@@ -287,7 +287,7 @@ def digestSentence(inputLine):
 	if words[0] == "go" and words[1] == "to":
 		lineDict["go to"] = words[2]
 	
-	if lineDict["call"]:
+	if "call" in lineDict:
 		lineDict["call"] = words[1]
 		if "using" in words:
 			usingPos = words.index("using")
@@ -295,16 +295,16 @@ def digestSentence(inputLine):
 			for word in words[usingPos+1:]:
 				lineDict["using"].append(word)
 	
-	if lineDict["if"]:
+	if "if" in lineDict:
 		lineDict["if"] = " ".join(words[1:])
 	
-	if lineDict["evaluate"]:
+	if "evaluate" in lineDict:
 		lineDict["evaluate"] = " ".join(words[1:])
 	
-	if lineDict["when"]:
+	if "when" in lineDict:
 		lineDict["when"] = " ".join(words[1:])
 	
-	if lineDict["perform"]:
+	if "perform" in lineDict:
 		thruPos = varyingPos = untilPos = timesPos = False
 		try:
 			thruPos = words.index("thru")
@@ -345,7 +345,7 @@ def digestSentence(inputLine):
 	
 	
 	for word in ["end-if","end-evaluate","end-perform","when","else","go to","goback","."]:
-		if lineDict[word]:
+		if word in lineDict:
 			lineDict["return statement"] = word
 			break
 	
