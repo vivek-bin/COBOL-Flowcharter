@@ -65,7 +65,6 @@ class ProcessingUnit:
 		self.performEndStack.append(performEnd)
 		
 		self.programCounter = self.inputFile.paraStart[performStart]
-
 	
 def createChart(PU,ignorePeriod=False):
 	programObj = []
@@ -357,10 +356,10 @@ def digestExecBlock(inputBlock):
 	inputLine = " ".join(inputBlock)
 	words = inputLine.split()
 	
-	keyList = []
-	keyList.extend(["type","call","goback","cursor","query","table","."])
-	for dictKey in keyList:
-		execDict[dictKey] = False
+	#keyList = []
+	#keyList.extend(["type","call","goback","cursor","query","table","."])
+	#for dictKey in keyList:
+	#	execDict[dictKey] = False
 
 	execDict["type"] = words[1]
 	
@@ -386,7 +385,8 @@ def digestExecBlock(inputBlock):
 		
 		for cursorPreword in ["declare","open","close","fetch"]:
 			if cursorPreword in words:
-				cursorPos = words.index[cursorPreword] + 1
+				cursorPos = words.index(cursorPreword) + 1
+				break
 		if "where" in words:
 			wherePos = words.index("where")
 			if words[wherePos+1] == "current" and words[wherePos+2] == "of":
@@ -399,6 +399,4 @@ def digestExecBlock(inputBlock):
 				execDict["query"] = queryWord
 				
 	return execDict
-
-
 

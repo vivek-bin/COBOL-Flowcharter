@@ -14,14 +14,15 @@ def t1():
 	
 	fileaccess.openLib(fileaccess.PROCESSING)
 	
-	file1 = fileaccess.loadFile(fileaccess.PROCESSING,"VIID246")
-	file1 = fileaccess.loadDATA("test")
+	file1 = fileaccess.loadFile(fileaccess.PROCESSING,"VIIDB48")
+	#file1 = fileaccess.loadDATA("test")
 	processingFile = pfc.ProgramProcessingFile(file1)
-		
+	print (time.time() - startTime)
+	
 	PU = createTree.ProcessingUnit(processingFile)
+	print (time.time() - startTime)
 	
 	fChart = createTree.createChart(PU,True)
-	
 	print (time.time() - startTime)
 	
 	return PU, fChart
