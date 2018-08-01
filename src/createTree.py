@@ -66,7 +66,10 @@ class ProcessingUnit:
 		self.performReturnStack.append(self.processedLines[-1])
 		self.performEndStack.append(performEnd)
 		
-		self.programCounter = self.inputFile.paraStart[performStart]
+		self.jumpToPara(performStart)
+		
+	def jumpToPara(self,paraName):
+		self.programCounter = self.inputFile.paraStart[paraName]
 		self.paraCall = True
 	
 	
@@ -93,12 +96,12 @@ def createChart(PU,ignorePeriod=False):
 				execBlock.append(inputLine)
 				
 			execDict = digestExecBlock(execBlock)
-			#lineDict["call"] = execDict["call"]
-			#lineDict["goback"] = execDict["goback"]
-			#add the exec block node
+			if "call" in execDict:
+				lineDict["call"] = execDict["call"]
+			if "goback" in execDict:
+				lineDict["goback"] = execDict["goback"]
+				
 			programObj.append(nodes.ExecNode(PU,execDict["type"]))
-			if "." in lineDict and not ignorePeriod:
-				break
 		
 		#returnable statements
 		if "goback" in lineDict:
@@ -106,7 +109,7 @@ def createChart(PU,ignorePeriod=False):
 		if "go to" in lineDict:
 			tempObj = nodes.GoToNode(PU,lineDict["go to"])
 			if lineDict["go to"] not in PU.performEndStack:
-				PU.programCounter = PU.inputFile.paraStart[lineDict["go to"]]
+				PU.jumpToPara(lineDict["go to"])
 				subChart = createChart(ProcessingUnit(PU),True)
 			programObj.append(tempObj)
 			tempObj = False
@@ -143,13 +146,10 @@ def createChart(PU,ignorePeriod=False):
 			programObj.append(tempObj)
 			tempObj = False
 			
+			skipStatementsGotoGoback(PU,ignorePeriod)
 			inputLine = PU.peekCurrentStatement()
 			lineDict = digestSentence(inputLine)
 			#print PU.programCounter 
-			
-			if "." in lineDict and not ignorePeriod:
-				break
-			continue
 		
 		
 		#check chart end
@@ -177,7 +177,6 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = False
 				if "." in lineDict and not ignorePeriod:
 					break
-			continue
 	
 			
 		if "evaluate" in lineDict:
@@ -205,7 +204,6 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = False
 				if "." in lineDict and not ignorePeriod:
 					break
-			continue
 		
 	
 	if tempObj:

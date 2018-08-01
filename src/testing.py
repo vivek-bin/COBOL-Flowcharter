@@ -16,12 +16,13 @@ def generateChart(file):
 	return PU, fChart
 	
 	
-def t1()
+def t1():
 	startTime = time.time()
 	fileaccess.openLib(fileaccess.PROCESSING)
 	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
 	
-	file = fileaccess.loadFile(fileaccess.PROCESSING,"VIB3251")
+	file = fileaccess.loadFile(fileaccess.PROCESSING,"VIID437")
+	file = fileaccess.loadDATA("test")
 	PU, fChart = generateChart(file)
 	
 	fileaccess.closeLib(fileaccess.PROCESSING)
@@ -31,3 +32,5 @@ def t1()
 	
 
 PU, f = t1()
+
+
