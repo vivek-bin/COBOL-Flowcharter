@@ -88,6 +88,7 @@ def createChart(PU,ignorePeriod=False):
 		
 		lineCount += 1
 		
+		
 		#exec nodes
 		if "exec" in lineDict:
 			execBlock = [inputLine]
@@ -103,19 +104,8 @@ def createChart(PU,ignorePeriod=False):
 				
 			programObj.append(nodes.ExecNode(PU,execDict["type"]))
 		
-		#returnable statements
-		if "goback" in lineDict:
-			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
-		if "go to" in lineDict:
-			tempObj = nodes.GoToNode(PU,lineDict["go to"])
-			if lineDict["go to"] not in PU.performEndStack:
-				PU.jumpToPara(lineDict["go to"])
-				subChart = createChart(ProcessingUnit(PU),True)
-			programObj.append(tempObj)
-			tempObj = False
 		
-		
-		#point nodes
+		#point node
 		if "para" in lineDict:
 			programObj.append(nodes.ParaNode(PU,lineDict["para"]))
 		if "call" in lineDict:
@@ -123,6 +113,30 @@ def createChart(PU,ignorePeriod=False):
 			if calledProgram == "'dfhei1'":
 				calledProgram = getFieldValue(PU,lineDict["using"][1])
 			programObj.append(nodes.CallNode(PU,calledProgram))
+			
+			
+		#returnable statements
+		if "goback" in lineDict:
+			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
+			while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriod):
+				createChart(PU,ignorePeriod)
+				inputLine = PU.peekCurrentStatement()
+				lineDict = digestSentence(inputLine)
+			break
+		if "go to" in lineDict:
+			tempObj = nodes.GoToNode(PU,lineDict["go to"])
+			if lineDict["go to"] not in PU.performEndStack:
+				PU.jumpToPara(lineDict["go to"])
+				subChart = createChart(ProcessingUnit(PU),True)
+				tempObj.branch = subChart
+			programObj.append(tempObj)
+			tempObj = False
+			while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriod):
+				createChart(PU,ignorePeriod)
+				inputLine = PU.peekCurrentStatement()
+				lineDict = digestSentence(inputLine)
+			break
+			
 		
 		#perform nodes
 		if "perform" in lineDict:
@@ -142,11 +156,11 @@ def createChart(PU,ignorePeriod=False):
 				ignorePeriod = False
 			
 			subChart = createChart(PU,ignorePeriod)
+			
 			tempObj.branch = subChart
 			programObj.append(tempObj)
 			tempObj = False
 			
-			skipStatementsGotoGoback(PU,ignorePeriod)
 			inputLine = PU.peekCurrentStatement()
 			lineDict = digestSentence(inputLine)
 			#print PU.programCounter 
@@ -168,7 +182,6 @@ def createChart(PU,ignorePeriod=False):
 			else:
 				tempObj.falseBranch = subChart
 			
-			skipStatementsGotoGoback(PU)
 			inputLine = PU.peekCurrentStatement()
 			lineDict = digestSentence(inputLine)
 			
@@ -195,7 +208,6 @@ def createChart(PU,ignorePeriod=False):
 				tempObj2.branch = subChart
 				tempObj.whenList.append(tempObj2)
 				
-				skipStatementsGotoGoback(PU)
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
 					
@@ -217,14 +229,6 @@ def createChart(PU,ignorePeriod=False):
 	#	programObj = []
 	
 	return programObj
-	
-def skipStatementsGotoGoback(PU,ignorePeriod=False):
-	inputLine = PU.peekCurrentStatement()
-	lineDict = digestSentence(inputLine)
-	while ("." not in lineDict or ignorePeriod) and ("go to" in lineDict or "goback" in lineDict):
-		createChart(PU)
-		inputLine = PU.peekCurrentStatement()
-		lineDict = digestSentence(inputLine)
 	
 def getFieldValue(PU,field):
 	if field[0] in ["'",'"'] or field.replace(".","").isdigit():

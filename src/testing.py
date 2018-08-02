@@ -21,7 +21,7 @@ def t1():
 	fileaccess.openLib(fileaccess.PROCESSING)
 	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
 	
-	file = fileaccess.loadFile(fileaccess.PROCESSING,"VIID437")
+	file = fileaccess.loadFile(fileaccess.PROCESSING,"VIID246")
 	file = fileaccess.loadDATA("test")
 	PU, fChart = generateChart(file)
 	
