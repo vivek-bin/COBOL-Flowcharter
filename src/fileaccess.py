@@ -69,6 +69,27 @@ def loadDATA(inputFileName):
 	except IOError:
 		f = []
 	return f
-
 	
+def appendDATA(inputFileName,inputLine):
+	try:
+		iFile = open(CONST.DATA+inputFileName+".txt","a")
+
+		iFile.write(inputLine+"\n")
+		iFile.close()
+		return False
+	except IOError:
+		return False
+
+def writeDATA(inputFileName,inputLine=""):
+	try:
+		iFile = open(CONST.DATA+inputFileName+".txt","w")
+
+		iFile.write(inputLine+"\n")
+		iFile.close()
+		return False
+	except IOError:
+		return False
+
+def writeLOG(inputLine):
+	appendDATA("log",inputLine)
 	

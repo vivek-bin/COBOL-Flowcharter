@@ -109,3 +109,7 @@ class EndNode(Node):
 		Node.__init__(self,PU)
 		self.errorEnd = operand
 
+class LoopBreakPointer(Node):
+	def __init__(self,PU,operand):
+		Node.__init__(self,PU)
+		self.link = operand

@@ -145,6 +145,12 @@ def processingFileClean(inputFile):
 			file.append(lineNo + inputLine)
 			continue
 		
+		if inputWords[0] == "procedure" and inputWords[1] == "division":
+			if line:
+				file.append(line)
+			line = lineNo + inputLine
+			continue
+			
 		if inputLine[0] != " " and len(inputWords) == 2 and inputWords[1] == "section":
 			if line:
 				file.append(line)

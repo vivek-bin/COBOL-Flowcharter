@@ -20,9 +20,9 @@ def t1():
 	startTime = time.time()
 	fileaccess.openLib(fileaccess.PROCESSING)
 	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
-	
-	file = fileaccess.loadFile(fileaccess.PROCESSING,"VIID437")
-	file = fileaccess.loadDATA("test")
+	fileaccess.writeDATA("log")
+	file = fileaccess.loadFile(fileaccess.PROCESSING,"VIB3248")
+	#file = fileaccess.loadDATA("test")
 	PU, fChart = generateChart(file)
 	
 	fileaccess.closeLib(fileaccess.PROCESSING)

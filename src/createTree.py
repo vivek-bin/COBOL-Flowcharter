@@ -3,6 +3,7 @@ import keywords
 import processingfileclass as pfc
 import nodes
 import time
+import fileaccess
 
 class ProcessingUnit:
 	def __init__(self,inputArg=False):
@@ -78,11 +79,13 @@ def createChart(PU,ignorePeriod=False):
 	tempObj = False
 	
 	lineCount = 0
-
+	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-		
+		fileaccess.writeLOG(str(PU.programCounter))
+		fileaccess.writeLOG(str(PU.processedLines[-1]))
+		fileaccess.writeLOG(str(inputLine))
 		if PU.paraReturn:
 			break
 		
@@ -140,37 +143,44 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = nodes.LoopNode(PU,lineDict["until"])
 			else:
 				tempObj = nodes.NonLoopNode(PU)
-
+			
+			ignorePeriodSub = False
+			paraAlreadyInPath = False
 			if lineDict["perform"] is not True:
+				ignorePeriodSub = True
 				performStart = lineDict["perform"]
 				performEnd = lineDict["perform"]
 				if "thru" in lineDict:
 					performEnd = lineDict["thru"]
-				PU.pushStack(performStart,performEnd)
-				ignorePeriodSub = True
-			else:
-				ignorePeriodSub = False
-			
-			subChart = createChart(PU,ignorePeriodSub)
-			tempObj.branch = subChart
-			programObj.append(tempObj)
-			tempObj = False
-			
-			inputLine = PU.peekCurrentStatement()
-			lineDict = digestSentence(inputLine)
-			awkwardReturnFlag = False
-			while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriodSub):
-				awkwardReturnFlag = True
-				createChart(PU,ignorePeriodSub)
+				
+				if performEnd in PU.performEndStack and performStart in PU.paraStack:
+					paraAlreadyInPath = True
+					tempObj = nodes.LoopBreakPointer(PU,performStart)
+					programObj.append(tempObj)
+					tempObj = False
+				else:	
+					PU.pushStack(performStart,performEnd)
+			if not paraAlreadyInPath:
+				subChart = createChart(PU,ignorePeriodSub)
+				tempObj.branch = subChart
+				programObj.append(tempObj)
+				tempObj = False
+				
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
-			if not awkwardReturnFlag:
-				while subChart and (subChart[-1].__class__ is nodes.LoopNode or subChart[-1].__class__ is nodes.NonLoopNode):
-					subChart = subChart[-1].branch
-				while subChart and (subChart[-1].__class__ is nodes.GoToNode or subChart[-1].__class__ is nodes.EndNode):
-					subChart = createChart(PU,ignorePeriodSub)
+				awkwardReturnFlag = False
+				while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriodSub):
+					awkwardReturnFlag = True
+					createChart(PU,ignorePeriodSub)
+					inputLine = PU.peekCurrentStatement()
+					lineDict = digestSentence(inputLine)
+				if not awkwardReturnFlag:
 					while subChart and (subChart[-1].__class__ is nodes.LoopNode or subChart[-1].__class__ is nodes.NonLoopNode):
 						subChart = subChart[-1].branch
+					while subChart and (subChart[-1].__class__ is nodes.GoToNode or subChart[-1].__class__ is nodes.EndNode):
+						subChart = createChart(PU,ignorePeriodSub)
+						while subChart and (subChart[-1].__class__ is nodes.LoopNode or subChart[-1].__class__ is nodes.NonLoopNode):
+							subChart = subChart[-1].branch
 			
 			if "." in lineDict and not ignorePeriod:
 				break
