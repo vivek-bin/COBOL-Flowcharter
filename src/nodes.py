@@ -11,15 +11,16 @@ class IfNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
 		self.condition = operand
-		self.trueBranch = []
-		self.falseBranch = []
+		self.branch = {}
+		self.branch[True] = []
+		self.branch[False] = []
 		
 	def isEmpty(self):
 		flag = True
-		for n in self.trueBranch:
+		for n in self.branch[True]:
 			if not n.isEmpty():
 				flag = False
-		for n in self.falseBranch:
+		for n in self.branch[False]:
 			if not n.isEmpty():
 				flag = False
 		return flag	

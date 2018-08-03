@@ -150,6 +150,13 @@ def processingFileClean(inputFile):
 				file.append(line)
 				line = ""
 			file.append(lineNo + inputWords[0]+".")
+			continue
+			
+		if inputLine[0] != " ":
+			if line:
+				file.append(line)
+				line = ""
+			file.append(lineNo + inputWords[0]+".")
 			continue			
 		
 		if inputWords[0] == "exec":

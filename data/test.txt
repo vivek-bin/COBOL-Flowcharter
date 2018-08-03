@@ -1,3 +1,379 @@
+00000001identification division.
+00000004program-id. viid437.
+00000058environment division.
+00000062data division.
+00000066working-storage section.
+0000008001 wpgws-work-area.
+00000081    05 wpgws-crnt-pgm-id pic x(08) value 'ssibfd'.
+00000083    05 filler pic x(24) value ' work-stor begins here>>'.
+00000085    05 wpgws-prev-pgm-id pic x(08) value space.
+00000086    05 wpgws-call-pgm-id pic x(08) value space.
+0000009201 ws-working-storage.
+00000093    05 ws-wa-address pointer value null.
+00000094    05 ws-tl-address pointer value null.
+00000095    05 ws-optm-sql-reqir pic 9(02).
+00000096    05 ws-optm-sql-exec pic x(02) value spaces.
+00000097    88 ws-optm-sql-cur-closed value spaces.
+00000098    05 ws-optm-sql-exec-n redefines ws-optm-sql-exec pic 9(02).
+0000011401 wwkdt-work-area.
+00000115    05 wwkdt-constant-fields.
+00000116    10 wwkdt-zero-dt pic x(10) value '0000-00-00'.
+00000118    10 wwkdt-low-dt pic x(10) value '0001-01-01'.
+00000120    10 wwkdt-high-dt pic x(10) value '9999-12-31'.
+00000122    10 wwkdt-high-age pic x(03) value '120'.
+00000124    10 wwkdt-zero-time pic x(08) value '00.00.00'.
+00000126    10 wwkdt-low-time pic x(08) value '00.00.01'.
+00000128    10 wwkdt-high-time pic x(08) value '24.00.00'.
+00000130    10 wwkdt-zero-tmsp pic x(26) value '0000-00-00-00.00.00.000000'.
+00000132    10 wwkdt-low-tmsp pic x(26) value '0001-01-01-00.00.00.000001'.
+00000134    10 wwkdt-high-tmsp pic x(26) value '9999-12-31-24.00.00.000000'.
+00000136    05 wwkdt-work-fields.
+00000137    10 wwkdt-int-dt-1.
+00000138    15 wwkdt-int-dt-yr-1 pic 9(04).
+00000139    15 filler pic x(01).
+00000140    15 wwkdt-int-dt-mo-1 pic 9(02).
+00000141    15 filler pic x(01).
+00000142    15 wwkdt-int-dt-dy-1 pic 9(02).
+00000143    10 wwkdt-int-dt-2.
+00000144    15 wwkdt-int-dt-yr-2 pic 9(04).
+00000145    15 filler pic x(01).
+00000146    15 wwkdt-int-dt-mo-2 pic 9(02).
+00000147    15 filler pic x(01).
+00000148    15 wwkdt-int-dt-dy-2 pic 9(02).
+00000149    10 wwkdt-num-yr pic s9(04).
+00000150    10 wwkdt-num-mo pic s9(04).
+00000151    10 wwkdt-time-int.
+00000152    15 wwkdt-time-int-hh pic 9(02).
+00000153    15 filler pic x(01).
+00000154    15 wwkdt-time-int-mm pic 9(02).
+00000155    15 filler pic x(01).
+00000156    15 wwkdt-time-int-ss pic 9(02).
+00000157    10 wwkdt-system-time.
+00000158    15 wwkdt-system-time-hh pic 9(02).
+00000159    15 wwkdt-system-time-mm pic 9(02).
+00000160    15 wwkdt-system-time-ss pic 9(02).
+00000161    10 wwkdt-system-time-n redefines wwkdt-system-time pic 9(06).
+00000163    10 wwkdt-tmsp.
+00000164    15 wwkdt-tmsp-yr pic 9(04).
+00000165    15 filler pic x(01).
+00000166    15 wwkdt-tmsp-mo pic 9(02).
+00000167    15 filler pic x(01).
+00000168    15 wwkdt-tmsp-day pic 9(02).
+00000169    15 filler pic x(01).
+00000170    15 wwkdt-tmsp-hr pic 9(02).
+00000171    15 filler pic x(01).
+00000172    15 wwkdt-tmsp-min pic 9(02).
+00000173    15 filler pic x(01).
+00000174    15 wwkdt-tmsp-sec pic 9(02).
+00000175    15 filler pic x(01).
+00000176    15 wwkdt-tmsp-msec pic 9(06).
+0000019301 zfd-null-indicators.
+00000194    05 zfd-nxt-fia-fnd-id-ni pic s9(04) comp.
+00000195    88 zfd-nxt-fia-fnd-id-null value -1.
+00000196    05 zfd-fia-valn-eff-dt-ni pic s9(04) comp.
+00000197    88 zfd-fia-valn-eff-dt-null value -1.
+0000021601 xat09-gr-don-app.
+0000021803 xat09-gr-don-all.
+00000220    05 xat09-cd-par pic x(08).
+00000222    05 xat09-id-pol pic x(11).
+00000224    05 xat09-id-ban pic x(50).
+0000023103 xat09-gr-don-ret.
+00000234    05 xat09-cd-ret pic x(2).
+00000236    05 xat09-cd-rai pic 9(6).
+00000238    05 xat09-no-par pic s9(4) comp.
+00000240    05 xat09-no-par-ban pic x(50).
+0000025201 wgpol-work-area.
+00000253    05 wgpol-pol-id pic x(11).
+00000255    05 wgpol-id-ing pic x(3) value spaces.
+00000256    05 wgpol-id-ing-n redefines wgpol-id-ing pic 9(03).
+00000259    05 wgpol-id-aiav2 pic x(03) value spaces.
+00000260    05 wgpol-id-aiav2-n redefines wgpol-id-aiav2 pic 9(03).
+00000263    05 wgpol-id-aiav3 pic x(03) value spaces.
+00000264    05 wgpol-id-aiav3-n redefines wgpol-id-aiav3 pic 9(03).
+00000266    05 wgpol-part-valu pic 9(03).
+00000268    05 wgpol-rum-pol-id-8.
+00000269    10 wgpol-rum-pol-id-8z pic x(03) value zeros.
+00000270    10 wgpol-rum-pol-id-8x pic x(08).
+00000272    05 wgpol-rum-pol-id-9.
+00000273    10 wgpol-rum-pol-id-9z pic x(02) value zeros.
+00000274    10 wgpol-rum-pol-id-9x pic x(09).
+00000276    05 wgpol-rum-pol-id-10.
+00000277    10 wgpol-rum-pol-id-10z pic x(01) value zeros.
+00000278    10 wgpol-rum-pol-id-10x pic x(10).
+00000280    05 wgpol-spc-length pic 9(01).
+00000281    05 wgpol-rum-pol-id-o pic x(11).
+0000028301 wgpol-constants.
+00000285    05 wgpol-part-no-001 pic 9(03) value 001.
+00000287    05 wgpol-spc-zero pic 9(03) value 0.
+00000288    05 wgpol-spc-one pic 9(03) value 1.
+00000289    05 wgpol-spc-two pic 9(03) value 2.
+00000290    05 wgpol-spc-three pic 9(03) value 3.
+00000298linkage section.
+0000030301 sqlca.
+00000304    03 sqlcaid pic x(8).
+00000305    03 sqlcabc pic s9(9) comp.
+00000306    03 sqlcode pic s9(9) comp.
+00000307    03 sqlerrm.
+00000308    49 sqlerrml pic s9(4) comp.
+00000309    49 sqlerrmc pic x(70).
+00000310    03 sqlerrp pic x(8).
+00000311    03 sqlerrd occurs 6 pic s9(9) comp.
+00000312    03 sqlwarn.
+00000313    05 sqlwarn0 pic x.
+00000314    05 sqlwarn1 pic x.
+00000315    05 sqlwarn2 pic x.
+00000316    05 sqlwarn3 pic x.
+00000317    05 sqlwarn4 pic x.
+00000318    05 sqlwarn5 pic x.
+00000319    05 sqlwarn6 pic x.
+00000320    05 sqlwarn7 pic x.
+00000321    03 sqlext.
+00000322    05 sqlwarn8 pic x.
+00000323    05 sqlwarn9 pic x.
+00000324    05 sqlwarna pic x.
+00000325    05 sqlstate pic x(5).
+0000033901 wfd-io-work-area.
+00000340    05 wfd-table-name pic x(04) value 'fd '.
+00000342    05 wfd-rqst-cd pic x(02).
+00000343    88 wfd-rqst-select value '01'.
+00000344    88 wfd-rqst-select-for-update value '02'.
+00000345    88 wfd-rqst-update value '03'.
+00000346    88 wfd-rqst-close-update-cur value '04'.
+00000347    88 wfd-rqst-init-tbl-layout value '05'.
+00000348    88 wfd-rqst-insert value '06'.
+00000349    88 wfd-rqst-delete value '07'.
+00000350    88 wfd-rqst-browse value '08'.
+00000351    88 wfd-rqst-fetch-next value '09'.
+00000352    88 wfd-rqst-close-browse-cur value '10'.
+00000353    88 wfd-rqst-browse-prev value '11'.
+00000354    88 wfd-rqst-fetch-prev value '12'.
+00000355    88 wfd-rqst-close-br-prev-cur value '13'.
+00000356    88 wfd-rqst-delete-key-range value '14'.
+00000357    88 wfd-rqst-delete-with-key value '15'.
+00000358    88 wfd-rqst-count value '16'.
+00000359    05 wfd-io-status pic 9(01) value 9.
+00000361    88 wfd-io-ok value 0.
+00000362    88 wfd-io-not-found value 7.
+00000363    88 wfd-io-eof value 8.
+00000364    88 wfd-io-error value 9.
+00000365    05 wfd-optm-sql-stat-cd pic x(01).
+00000366    88 wfd-optm-sql-ok value '0'.
+00000367    88 wfd-optm-sql-imprv value '1'.
+00000368    88 wfd-optm-sql-error value '2'.
+00000369    05 wfd-optm-sql-reqir pic x(02).
+00000370    05 wfd-optm-sql-exec pic x(02).
+00000371    05 wfd-company-required-sw pic x(01) value 'y'.
+00000373    88 wfd-company-required value 'y'.
+00000374    88 wfd-company-not-required value 'n'.
+00000375    05 wfd-count pic s9(09) comp-3.
+00000376    05 wfd-key.
+00000377    10 wfd-co-id pic x(02).
+00000378    10 wfd-fia-rest-key-info.
+00000379    15 wfd-pol-id pic x(11).
+00000380    15 wfd-pol-id-r redefines wfd-pol-id.
+00000382    20 wfd-pol-id-base pic x(10).
+00000383    20 wfd-pol-id-sfx pic x(01).
+00000384    15 wfd-cvg-num pic x(02).
+00000385    15 wfd-cvg-num-n redefines wfd-cvg-num pic 9(02).
+00000387    15 wfd-fnd-id pic x(06).
+00000388    15 wfd-fia-eff-dt pic x(10).
+00000389    15 wfd-fia-tmsp pic x(26).
+00000390    05 wfd-endbr-key.
+00000391    10 wfd-endbr-co-id pic x(02).
+00000392    10 wfd-endbr-pol-id pic x(11).
+00000393    10 wfd-endbr-cvg-num pic x(02).
+00000394    10 wfd-endbr-fnd-id pic x(06).
+00000395    10 wfd-endbr-fia-eff-dt pic x(10).
+00000396    10 wfd-endbr-fia-tmsp pic x(26).
+00000397    05 wfd-fia-unit-stat-cd pic x(1).
+00000398    88 wfd-fia-unit-stat-complete value 'e'.
+00000399    88 wfd-fia-unit-stat-started value 'u'.
+00000400    88 wfd-fia-unit-stat-not-strt value 'n'.
+00000401    05 wfd-fia-revrs-stat-cd pic x(1).
+00000402    88 wfd-fia-revrs-stat-not-strt value ' '.
+00000403    88 wfd-fia-revrs-stat-started value 'x'.
+00000404    88 wfd-fia-revrs-stat-complete value 'y'.
+0000044701 rfd-rec-info.
+00000448    05 rfd-key.
+00000449    10 rfd-co-id pic x(2).
+00000450    10 rfd-fia-rest-key-info.
+00000451    15 rfd-pol-id pic x(11).
+00000452    15 rfd-pol-id-r redefines rfd-pol-id.
+00000454    20 rfd-pol-id-base pic x(10).
+00000455    20 rfd-pol-id-sfx pic x(01).
+00000456    15 rfd-cvg-num pic x(02).
+00000457    15 rfd-cvg-num-n redefines rfd-cvg-num pic 9(02).
+00000459    15 rfd-fnd-id pic x(06).
+00000460    15 rfd-fia-eff-dt pic x(10).
+00000461    15 rfd-fia-tmsp pic x(26).
+00000462    05 rfd-fia-vers-ctr pic s9(8) comp.
+00000463    05 rfd-fia-info.
+00000464    10 rfd-nxt-fia-info.
+00000465    15 rfd-nxt-fia-fnd-id pic x(06).
+00000466    10 rfd-fia-revrs-stat-cd pic x(1).
+00000467    88 rfd-fia-revrs-stat-not-strt value ' '.
+00000468    88 rfd-fia-revrs-stat-started value 'x'.
+00000469    88 rfd-fia-revrs-stat-complete value 'y'.
+00000470    10 rfd-fia-unit-stat-cd pic x(1).
+00000471    88 rfd-fia-unit-stat-complete value 'e'.
+00000472    88 rfd-fia-unit-stat-started value 'u'.
+00000473    88 rfd-fia-unit-stat-not-strt value 'n'.
+00000474    10 rfd-fia-alloc-info.
+00000475    15 rfd-fia-in-alloc-pct pic s9(3)v9(4) comp-3.
+00000476    15 rfd-fia-out-alloc-pct pic s9(3)v9(4) comp-3.
+00000477    15 rfd-fia-valu-surr-pct pic s9(3)v9(4) comp-3.
+00000478    10 rfd-fia-amt-info.
+00000480    15 rfd-fia-fnd-trxn-amt pic s9(8)v9(2) comp-3.
+00000482    15 rfd-fia-load-amt pic s9(8)v9(2) comp-3.
+00000483    15 rfd-pend-dpos-int-amt pic s9(7)v99 comp-3.
+00000485    15 rfd-fia-pend-amt pic s9(8)v9(2) comp-3.
+00000486    15 rfd-fia-surr-unit-qty pic s9(9)v9(9) comp-3.
+00000487    10 rfd-fia-unit-info.
+00000489    15 rfd-fia-iunit-pric-amt pic s9(8)v9(9) comp-3.
+00000491    15 rfd-fia-aunit-pric-amt pic s9(8)v9(9) comp-3.
+00000492    15 rfd-fia-iunit-qty-info.
+00000493    20 rfd-fia-intg-iunit-qty pic s9(11) comp-3.
+00000494    20 rfd-fia-dcml-iunit-qty pic sv9(09) comp-3.
+00000495    15 rfd-fia-aunit-qty-info.
+00000496    20 rfd-fia-intg-aunit-qty pic s9(11) comp-3.
+00000497    20 rfd-fia-dcml-aunit-qty pic sv9(09) comp-3.
+00000498    10 rfd-fia-carr-fwd-info.
+00000499    15 rfd-cfn-trxn-ltd-amt pic s9(9)v99 comp-3.
+00000500    15 rfd-cfn-load-ltd-amt pic s9(9)v99 comp-3.
+00000501    15 rfd-cfn-int-ltd-amt pic s9(9)v99 comp-3.
+00000503    15 rfd-cfn-pend-ltd-amt pic s9(8)v9(2) comp-3.
+00000504    15 rfd-cfn-iunit-ltd-qty-info.
+00000505    20 rfd-cfn-intg-iunit-qty pic s9(11) comp-3.
+00000506    20 rfd-cfn-dcml-iunit-qty pic sv9(09) comp-3.
+00000507    15 rfd-cfn-aunit-ltd-qty-info.
+00000508    20 rfd-cfn-intg-aunit-qty pic s9(11) comp-3.
+00000509    20 rfd-cfn-dcml-aunit-qty pic sv9(09) comp-3.
+00000510    10 rfd-fia-gla-info.
+00000511    15 rfd-fia-gla-cd pic x(01).
+00000512    15 rfd-fia-fnd-gla-amt pic s9(9)v99 comp-3.
+00000513    15 rfd-fia-gnrl-gla-amt pic s9(9)v99 comp-3.
+00000514    15 rfd-fia-revrs-gla-cd pic x(01).
+00000515    15 rfd-revrs-fnd-gla-amt pic s9(9)v99 comp-3.
+00000516    15 rfd-revrs-gnrl-gla-amt pic s9(9)v99 comp-3.
+00000517    05 rfd-fia-valn-eff-dt pic x(10).
+00000518    05 rfd-pend-dpos-tmg-amt pic s9(07)v9(02) comp-3.
+00000519    05 rfd-wthdr-typ-cd pic x(01).
+00000520    88 rfd-wthdr-typ-amount value 'a'.
+00000521    88 rfd-wthdr-typ-units value 'u'.
+00000522    05 rfd-cfn-csv-ltd-amt pic s9(9)v99 comp-3.
+00000529    05 rfd-payo-v1-csv-amt pic s9(9)v99 comp-3.
+00000530    05 rfd-payo-v2-csv-amt pic s9(9)v99 comp-3.
+00000531    05 rfd-fndvl-eff-dt pic x(10).
+00000532    05 rfd-div-src-fnd-id pic x(06).
+00000533    05 rfd-fnd-xpns-tax-rt pic s9(03)v9(05) comp-3.
+00000534    05 rfd-rbt-amt pic s9(09)v9(02) comp-3.
+00000535    05 rfd-alloc-pct pic s9(03)v9(05) comp-3.
+00000536    05 rfd-sell-ntcd-amt pic s9(08)v9(03) comp-3.
+00000538    05 rfd-fnd-ref-amt pic s9(09)v9(02) comp-3.
+00000539    05 rfd-fnd-manag-obj-id pic x(03).
+00000543    05 rfd-insur-intg-mdt-fee-qty pic s9(11) comp-3.
+00000545    05 rfd-insur-dcml-mdt-fee-qty pic sv9(09) comp-3.
+00000546    05 rfd-insur-mdt-fee-amt pic s9(09)v9(02) comp-3.
+00000547    05 rfd-insur-mdt-fee-pct pic s9(03)v9(05) comp-3.
+00000548    05 rfd-retail-intg-mdt-fee-qty pic s9(11) comp-3.
+00000550    05 rfd-retail-dcml-mdt-fee-qty pic sv9(09) comp-3.
+00000551    05 rfd-retail-mdt-fee-amt pic s9(09)v9(02) comp-3.
+00000552    05 rfd-retail-mdt-fee-pct pic s9(03)v9(05) comp-3.
+00000553    05 rfd-trust-intg-mdt-fee-qty pic s9(11) comp-3.
+00000555    05 rfd-trust-dcml-mdt-fee-qty pic sv9(09) comp-3.
+00000556    05 rfd-trust-mdt-fee-amt pic s9(09)v9(02) comp-3.
+00000557    05 rfd-trust-mdt-fee-pct pic s9(03)v9(05) comp-3.
+00000558    05 rfd-mvt-wgt-in-out-amt pic s9(09)v9(07) comp-3.
+00000559    05 rfd-surr-valu-gar-amt pic s9(09)v9(02) comp-3.
+00000560    05 rfd-trg-uct-qty pic s9(06) comp-3.
+00000561    05 rfd-mdu-pab-amt pic s9(09)v9(02) comp-3.
+00000562    05 rfd-div-defer-qty-info.
+00000563    10 rfd-div-intg-defer-qty pic s9(11) comp-3.
+00000564    10 rfd-div-dcml-defer-qty pic sv9(09) comp-3.
+00000565    05 rfd-pmts-wthdr-defer-dt pic x(10).
+00000566    05 filler pic x(08).
+0000057401 rfd-viidb76-read-key.
+00000575    05 rfd-viidb76-co-id pic x(2).
+00000576    05 rfd-viidb76-fia-rest-key-info.
+00000577    10 rfd-viidb76-pol-id pic x(11).
+00000578    10 rfd-viidb76-pol-id-r redefines rfd-viidb76-pol-id.
+00000580    15 rfd-viidb76-pol-id-base pic x(10).
+00000581    15 rfd-viidb76-pol-id-sfx pic x(01).
+00000582    10 rfd-viidb76-cvg-num pic x(02).
+00000583    10 rfd-viidb76-cvg-num-n redefines rfd-viidb76-cvg-num pic 9(02).
+00000585    10 rfd-viidb76-fnd-id pic x(06).
+00000586    10 rfd-viidb76-fia-eff-dt pic x(10).
+00000587    10 rfd-viidb76-fia-tmsp pic x(26).
+0000058801 rfd-viidb76-rec-ind.
+00000589    05 rfd-viidb76-rec pic x(01).
+00000590    88 rfd-cur-viidb76 value '1'.
+00000591    88 rfd-sav-viidb76 value '2'.
+0000059201 rfd-viid0m32-read-key.
+00000593    05 rfd-viid0m32-co-id pic x(2).
+00000594    05 rfd-viid0m32-fia-rest-key-info.
+00000595    10 rfd-viid0m32-pol-id pic x(11).
+00000596    10 rfd-viid0m32-pol-id-r redefines rfd-viid0m32-pol-id.
+00000598    15 rfd-viid0m32-pol-id-base pic x(10).
+00000599    15 rfd-viid0m32-pol-id-sfx pic x(01).
+00000600    10 rfd-viid0m32-cvg-num pic x(02).
+00000601    10 rfd-viid0m32-cvg-num-n redefines rfd-viid0m32-cvg-num pic 9(02).
+00000603    10 rfd-viid0m32-fnd-id pic x(06).
+00000604    10 rfd-viid0m32-fia-eff-dt pic x(10).
+00000605    10 rfd-viid0m32-fia-tmsp pic x(26).
+0000060601 rfd-viid0m32-rec-ind.
+00000607    05 rfd-viid0m32-rec pic x(01).
+00000608    88 rfd-cur-viid0m32 value '1'.
+00000609    88 rfd-sav-viid0m32 value '2'.
+0000061001 rfd-viid437-read-key.
+00000611    05 rfd-viid437-co-id pic x(2).
+00000612    05 rfd-viid437-fia-rest-key-info.
+00000613    10 rfd-viid437-pol-id pic x(11).
+00000614    10 rfd-viid437-pol-id-r redefines rfd-viid437-pol-id.
+00000616    15 rfd-viid437-pol-id-base pic x(10).
+00000617    15 rfd-viid437-pol-id-sfx pic x(01).
+00000618    10 rfd-viid437-cvg-num pic x(02).
+00000619    10 rfd-viid437-cvg-num-n redefines rfd-viid437-cvg-num pic 9(02).
+00000621    10 rfd-viid437-fnd-id pic x(06).
+00000622    10 rfd-viid437-fia-eff-dt pic x(10).
+00000623    10 rfd-viid437-fia-tmsp pic x(26).
+0000062401 rfd-viid437-rec-ind.
+00000625    05 rfd-viid437-rec pic x(01).
+00000626    88 rfd-cur-viid437 value '1'.
+00000627    88 rfd-sav-viid437 value '2'.
+0000062801 rfd-viid439-read-key.
+00000629    05 rfd-viid439-co-id pic x(2).
+00000630    05 rfd-viid439-fia-rest-key-info.
+00000631    10 rfd-viid439-pol-id pic x(11).
+00000632    10 rfd-viid439-pol-id-r redefines rfd-viid439-pol-id.
+00000634    15 rfd-viid439-pol-id-base pic x(10).
+00000635    15 rfd-viid439-pol-id-sfx pic x(01).
+00000636    10 rfd-viid439-cvg-num pic x(02).
+00000637    10 rfd-viid439-cvg-num-n redefines rfd-viid439-cvg-num pic 9(02).
+00000639    10 rfd-viid439-fnd-id pic x(06).
+00000640    10 rfd-viid439-fia-eff-dt pic x(10).
+00000641    10 rfd-viid439-fia-tmsp pic x(26).
+0000064201 rfd-viid439-rec-ind.
+00000643    05 rfd-viid439-rec pic x(01).
+00000644    88 rfd-cur-viid439 value '1'.
+00000645    88 rfd-sav-viid439 value '2'.
+0000064601 rfd-viid441-read-key.
+00000647    05 rfd-viid441-co-id pic x(2).
+00000648    05 rfd-viid441-fia-rest-key-info.
+00000649    10 rfd-viid441-pol-id pic x(11).
+00000650    10 rfd-viid441-pol-id-r redefines rfd-viid441-pol-id.
+00000652    15 rfd-viid441-pol-id-base pic x(10).
+00000653    15 rfd-viid441-pol-id-sfx pic x(01).
+00000654    10 rfd-viid441-cvg-num pic x(02).
+00000655    10 rfd-viid441-cvg-num-n redefines rfd-viid441-cvg-num pic 9(02).
+00000657    10 rfd-viid441-fnd-id pic x(06).
+00000658    10 rfd-viid441-fia-eff-dt pic x(10).
+00000659    10 rfd-viid441-fia-tmsp pic x(26).
+0000066001 rfd-viid441-rec-ind.
+00000661    05 rfd-viid441-rec pic x(01).
+00000662    88 rfd-cur-viid441 value '1'.
+00000663    88 rfd-sav-viid441 value '2'.
+00000670procedure division using sqlca wfd-io-work-area rfd-viid437-read-key rfd-viid437-rec-ind rfd-rec-info.
+000006770000-mainline.
 00000680    if ws-wa-address not = address of wfd-io-work-area or ws-tl-address not = address of rfd-rec-info
 00000682    set ws-wa-address to address of wfd-io-work-area
 00000683    set ws-tl-address to address of rfd-rec-info
@@ -5,6 +381,7 @@
 00000685    end-if.
 00000688    evaluate true
 00000690    when wfd-rqst-browse
+00000691    perform 1000-determine-sql-reqir thru 1000-determine-sql-reqir-x
 00000693    perform 2000-exec-browse thru 2000-exec-browse-x
 00000696    when wfd-rqst-fetch-next
 00000697    perform 3000-exec-fetch-next thru 3000-exec-fetch-next-x
@@ -16,7 +393,6 @@
 00000709    set wfd-io-error to true
 00000711    end-evaluate.
 00000714    goback.
-00000691    perform 1000-determine-sql-reqir thru 1000-determine-sql-reqir-x
 000007170000-mainline-x.
 00000718    exit.
 000007221000-determine-sql-reqir.
