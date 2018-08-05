@@ -299,7 +299,7 @@ def writeAllProcessingExpand(start=0,end=999999):
 	print (time.time() - startTime)
 	
 	
-def t1(start=0,end=99):
+def t1(start=0,end=9999999):
 	writeAllProcessingExpand(start,end)
 	
 	

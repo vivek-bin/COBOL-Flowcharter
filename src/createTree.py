@@ -83,9 +83,7 @@ def createChart(PU,ignorePeriod=False):
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-		fileaccess.writeLOG(str(PU.programCounter))
-		fileaccess.writeLOG(str(PU.processedLines[-1]))
-		fileaccess.writeLOG(str(inputLine))
+		#fileaccess.writeLOG(str(PU.processedLines[-1]) + "   " + str(inputLine))
 		if PU.paraReturn:
 			break
 		
@@ -144,7 +142,6 @@ def createChart(PU,ignorePeriod=False):
 			else:
 				tempObj = nodes.NonLoopNode(PU)
 			
-			ignorePeriodSub = False
 			paraAlreadyInPath = False
 			if lineDict["perform"] is not True:
 				ignorePeriodSub = True
@@ -153,13 +150,16 @@ def createChart(PU,ignorePeriod=False):
 				if "thru" in lineDict:
 					performEnd = lineDict["thru"]
 				
-				if performEnd in PU.performEndStack and performStart in PU.paraStack:
+				if performStart in PU.paraStack:
 					paraAlreadyInPath = True
 					tempObj = nodes.LoopBreakPointer(PU,performStart)
 					programObj.append(tempObj)
 					tempObj = False
-				else:	
+				else:
 					PU.pushStack(performStart,performEnd)
+			else:
+				ignorePeriodSub = False
+				
 			if not paraAlreadyInPath:
 				subChart = createChart(PU,ignorePeriodSub)
 				tempObj.branch = subChart
@@ -184,6 +184,7 @@ def createChart(PU,ignorePeriod=False):
 			
 			if "." in lineDict and not ignorePeriod:
 				break
+			continue
 		
 		
 		#check chart end
@@ -260,15 +261,22 @@ def createChart(PU,ignorePeriod=False):
 def getFieldValue(PU,field):
 	if field[0] in ["'",'"'] or field.replace(".","").isdigit():
 		return field
-
+	i=0
 	for lineNo in reversed(PU.processedLines):
+		i+=1
+		if i>500:
+			break
 		processedLine = PU.peekStatement(lineNo)
+		if not processedLine.startswith("move "):
+			continue
 		processedDict = digestSentence(processedLine)
 		if "move" in processedDict:
 			if field in processedDict["to"]:
+				i=0
 				field = processedDict["move"]
 				if field[0] in ["'",'"'] or field.replace(".","").isdigit():
 					break
+	#print i
 	
 	#get initial value(string in quotes,number) if not MOVE'd
 	if field[0] in ["'",'"'] or field.replace(".","").isdigit():

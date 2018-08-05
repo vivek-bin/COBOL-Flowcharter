@@ -10,18 +10,18 @@ def generateChart(file):
 	
 	processingFile = pfc.ProgramProcessingFile(file)
 	PU = createTree.ProcessingUnit(processingFile)
-	
+	print "getting chart"
 	fChart = createTree.createChart(PU,True)
 	
 	return PU, fChart
 	
 	
-def t1():
+def getChart(component):
 	startTime = time.time()
 	fileaccess.openLib(fileaccess.PROCESSING)
 	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
 	fileaccess.writeDATA("log")
-	file = fileaccess.loadFile(fileaccess.PROCESSING,"VIB3248")
+	file = fileaccess.loadFile(fileaccess.PROCESSING,component)
 	#file = fileaccess.loadDATA("test")
 	PU, fChart = generateChart(file)
 	
@@ -30,7 +30,11 @@ def t1():
 	print (time.time() - startTime)
 	return PU, fChart
 	
+PU=[]
+f=[]
 
-PU, f = t1()
+def t1(component="VIB3248"):
+	global PU,f
+	PU, f = getChart(component)
 
 
