@@ -7,6 +7,9 @@ class Node:
 	def isEmpty(self):
 		return False
 		
+	def width():
+		return 20
+		
 class IfNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
@@ -24,6 +27,20 @@ class IfNode(Node):
 			if not n.isEmpty():
 				flag = False
 		return flag	
+		
+	def width():
+		trueWidth = falseWidth = 0
+		for n in branch[True]:
+			tempWidth = n.width()
+			if tempWidth > trueWidth:
+				trueWidth = tempWidth
+		
+		for n in branch[False]:
+			tempWidth = n.width()
+			if tempWidth > falseWidth:
+				falseWidth = tempWidth
+		
+		return trueWidth + falseWidth
 
 class EvaluateNode(Node):
 	def __init__(self,PU,operand):
@@ -37,6 +54,13 @@ class EvaluateNode(Node):
 			if not n.isEmpty():
 				flag = False
 		return flag
+		
+	def width():
+		finalWidth = 0
+		for whenBranch in whenList:
+			finalWidth += whenBranch.width()
+			
+		return finalWidth
 	
 class WhenNode(Node):
 	def __init__(self,PU,operand):
@@ -54,6 +78,14 @@ class WhenNode(Node):
 				flag = False
 		return flag
 	
+	def width():
+		w = 0
+		for n in branch:
+			tempWidth = n.width()
+			if tempWidth > w:
+				w = tempWidth
+		return w
+	
 class LoopNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
@@ -66,7 +98,16 @@ class LoopNode(Node):
 			if not n.isEmpty():
 				flag = False
 		return flag
+		
 	
+	def width():
+		w = 0
+		for n in branch:
+			tempWidth = n.width()
+			if tempWidth > w:
+				w = tempWidth
+		return w + 20
+		
 class NonLoopNode(Node):
 	def __init__(self,PU):
 		Node.__init__(self,PU)
@@ -79,11 +120,29 @@ class NonLoopNode(Node):
 				flag = False
 		return flag
 	
+	
+	def width():
+		w = 0
+		for n in branch:
+			tempWidth = n.width()
+			if tempWidth > w:
+				w = tempWidth
+		return w
+		
 class GoToNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
 		self.link = operand
 		self.branch = []
+	
+	def width():
+		w = 0
+		for n in branch:
+			tempWidth = n.width()
+			if tempWidth > w:
+				w = tempWidth
+	
+		return w + 20
 	
 class ParaNode(Node):
 	def __init__(self,PU,operand):
@@ -92,6 +151,9 @@ class ParaNode(Node):
 		
 	def isEmpty(self):
 		return True
+		
+	def width():
+		return 10
 		
 class CallNode(Node):
 	def __init__(self,PU,operand):
@@ -113,3 +175,7 @@ class LoopBreakPointer(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
 		self.link = operand
+	
+	def width():
+		return 20 + 20
+		
