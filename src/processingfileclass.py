@@ -80,11 +80,12 @@ class ProgramProcessingFile:
 		self.paraStart = {}
 		self.paraEnd = {}
 		
-		self.inputFile = inputFile 
+		if inputFile:
+			self.inputFile = inputFile 
 		
-		self.inputFileLineNo = [inputLine[:CONST.ZEROPAD] for inputLine in self.inputFile]
-		self.inputFile = [inputLine[CONST.ZEROPAD:] for inputLine in self.inputFile]
-		
-		self.setDivisions()
-		self.setParaDictionary()
+			self.inputFileLineNo = [inputLine[:CONST.ZEROPAD] for inputLine in self.inputFile]
+			self.inputFile = [inputLine[CONST.ZEROPAD:] for inputLine in self.inputFile]
+			
+			self.setDivisions()
+			self.setParaDictionary()
 	

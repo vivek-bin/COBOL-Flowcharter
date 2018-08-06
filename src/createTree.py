@@ -112,8 +112,14 @@ def createChart(PU,ignorePeriod=False):
 		if "call" in lineDict:
 			calledProgram = getFieldValue(PU,lineDict["call"])
 			if calledProgram == "'dfhei1'":
-				calledProgram = getFieldValue(PU,lineDict["using"][1])
-			programObj.append(nodes.CallNode(PU,calledProgram))
+				if len(lineDict["using"])==1:
+					lineDict["goback"] = True
+					calledProgram = ""
+				else:
+					calledProgram = getFieldValue(PU,lineDict["using"][1])
+			
+			if calledProgram:
+				programObj.append(nodes.CallNode(PU,calledProgram))
 			
 			
 		#returnable statements
@@ -435,3 +441,30 @@ def digestExecBlock(inputBlock):
 				
 	return execDict
 
+def generateChart(file):
+	fChart = []
+	
+	processingFile = pfc.ProgramProcessingFile(file)
+	PU = ProcessingUnit(processingFile)
+	
+	fChart = createChart(PU,True)
+	
+	return PU, fChart
+	
+def getChart(component):
+	fileaccess.openLib(fileaccess.PROCESSING)
+	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
+	fileaccess.writeDATA("log")
+	file = fileaccess.loadFile(fileaccess.PROCESSING,component)
+	#file = fileaccess.loadDATA("test")
+	
+	PU, fChart = generateChart(file)
+	fileaccess.writePickle(component,fChart)
+	#f2 = fileaccess.loadPickle(component)
+	
+	fileaccess.closeLib(fileaccess.PROCESSING)
+	
+	return fChart
+	
+
+	

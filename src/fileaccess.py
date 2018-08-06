@@ -1,5 +1,7 @@
 import zipfile
 import constants as CONST
+import pickle
+from nodes import *
 
 SRCE = 0
 COPY = 1
@@ -92,4 +94,20 @@ def writeDATA(inputFileName,inputLine=""):
 
 def writeLOG(inputLine):
 	appendDATA("log",inputLine)
+
+
+
+def writePickle(outputFileName,file):
+	outputFile = open(CONST.TREES+filePaths[TREES]+outputFileName,"wb")
+	pickle.dump(file,outputFile)
+	outputFile.close()
 	
+def loadPickle(outputFileName):
+	outputFile = open(CONST.TREES+filePaths[TREES]+outputFileName,"rb")
+	file = pickle.load(outputFile)
+	outputFile.close()
+	return file
+
+
+
+

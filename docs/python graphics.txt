@@ -14,7 +14,7 @@ class Example(Frame):
 		#create canvas
 		canvas1 = Canvas(self, relief = FLAT, background = "#D2D2D2",width = 180, height = 500)
 		canvas1.pack(side = TOP, anchor = NW, padx = 10, pady = 10)
-		canvas1.create_line(0, 0, 200, 100, fill="red",width=10)
+		canvas1.create_line(0, 0, 200, 100, fill="red")
 		#add quit button
 		button1 = Button(canvas1, text = "Quit", command = self.quit,anchor = W)
 		button1.configure(width = 10, activebackground = "#33B5E5",relief = FLAT)
@@ -22,7 +22,7 @@ class Example(Frame):
 		#button1.pack(side = TOP)
 		#add quit button
 		button2 = Button(canvas1, text = "Quit", command = self.quit,anchor = W)
-		button2.configure(activebackground = "#33B5E5")
+		button2.configure(activebackground = "#33B5E5",relief = FLAT)
 		button2_window = canvas1.create_window(10, 90, anchor=NW, window=button2)
 		#button2.pack(side = TOP)
 

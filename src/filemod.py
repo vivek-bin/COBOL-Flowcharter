@@ -83,6 +83,7 @@ def processingFile(inputFile):
 		if inputLine[:4] == "    ":
 			inputLine = " ".join(inputLine.split())
 			inputLine = inputLine.replace("( ","(").replace(" )",")")
+			inputLine = inputLine.replace("("," (").replace(")",") ")
 			words = inputLine.split()
 			
 			inputLine = prevWord = words[0]
