@@ -7,8 +7,7 @@ import tooltip
 
 class Chart:
 	def __init__(self,component,canvas):
-		self.lineNumbers = {}
-		self.details = {}
+		self.nodeDict = {}
 		self.component = component
 		canvas.tag_bind("JumpToLine", "<ButtonPress-1>", self.openExpandedCode)
 		
