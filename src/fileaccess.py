@@ -1,6 +1,7 @@
 import zipfile
 import constants as CONST
 import pickle
+import os
 from nodes import *
 
 SRCE = 0
@@ -39,6 +40,14 @@ def fileListLib(lib):
 	fileList = zips[lib].namelist()
 	fileList = [fileName[len(filePaths[lib]):] for fileName in fileList]
 	return fileList
+	
+def extractExpandedFile(fileName):
+	fileName = filePaths[EXPANDED] + fileName.upper()
+	if not os.path.isfile(CONST.EXPANDED + fileName):
+		zips[EXPANDED] = zipfile.ZipFile(zipPaths[EXPANDED])
+		zips[EXPANDED].extract(fileName, CONST.EXPANDED)
+		zips[EXPANDED].close()
+	return CONST.EXPANDED + fileName
 	
 def loadFile(lib,fileName):
 	try:

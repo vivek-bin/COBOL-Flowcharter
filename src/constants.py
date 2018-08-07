@@ -21,3 +21,6 @@ TREESZIP = MTPZIP + "TREES.zip"
 DATA = PROJECT + "DATA\\"
 
 ZEROPAD = 8
+
+FONT = "Courier New"
+NPLOCATION = '"C:\\Program Files\\Notepad++\\notepad++.exe"'

@@ -9,16 +9,11 @@ def t9(component="VIID246"):
 	
 	chart = createTree.getChart(component)
 	
-	
-	
-	
 	print (time.time() - startTime)
 	
 	return chart
 	
 	
-#os.system('"C:\Program Files\Notepad++\notepad++.exe" "d:\Profiles\vbindal\Desktop\2389 email jcl.txt" -n65')
-
 
 from Tkinter import *
 
@@ -26,12 +21,13 @@ root = Tk()
 
 canvas = Canvas(root, width=400, height=200)
 canvas.pack()
-canvas.create_oval(10, 10, 110, 60, fill="grey")
+o = canvas.create_oval(10, 10, 110, 60, fill="grey",activefill="red")
+print o
 canvas.create_text(60, 35, text="Oval")
 canvas.create_rectangle(10, 100, 110, 150, outline="blue")
 canvas.create_text(60, 125, text="Rectangle")
 canvas.create_line(60, 60, 60, 100, width=3)
-
+canvas.try1234vivek = "jk"
 class MouseMover():
     def __init__(self):
         self.item = 0; self.previous = (0, 0)
