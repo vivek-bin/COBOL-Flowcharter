@@ -4,6 +4,9 @@ class Node:
 		self.paraStack = PU.paraStack[:]
 		self.lineNo = PU.programCounter
 		
+	def description(self):
+		return ""
+		
 	def isEmpty(self):
 		return False
 		
