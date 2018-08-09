@@ -169,7 +169,7 @@ class GoToNode(Node):
 			if tempWidth > w:
 				w = tempWidth
 	
-		return w + 20
+		return w + Node.width(self)
 	
 class ParaNode(Node):
 	def __init__(self,PU,operand):
@@ -178,9 +178,6 @@ class ParaNode(Node):
 		
 	def isEmpty(self):
 		return True
-		
-	def width(self):
-		return 10
 		
 class CallNode(Node):
 	def __init__(self,PU,operand):

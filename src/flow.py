@@ -24,14 +24,26 @@ class ChartWindow(Tkinter.Frame):
 	def newBlock(self,node,x,y):
 		tags = ("JumpToLine","HasDetails")
 		
-		objIds = self.canvas.create_image(x,y,image=node.idleIcon,tags=tags)
+		objIds = self.canvas.create_image(x,y,image=node.idleIcon,activeimage=node.hoverIcon,tags=tags)
 		textId = self.canvas.create_text(x,y,text=node.iconText(),font=CONST.FONT,fill="#000000",tags=tags)
 			
 		self.nodeDict[objId] = node
 		self.nodeDict[textId] = node
 		
-	def joiningLine(self,prevX,prevY,curX,curY):
-		return self.canvas.create_line(prevX,prevY,curX,curY,fill="#000000")
+	def joiningLine(self,prevX,prevY,curX,curY,bend=False):
+		if bend = "N":
+			midY = (prevY + curY)/2
+			return self.canvas.create_line(prevX,prevY,prevX,midY,curX,midY,curX,curY,fill="#000000")
+		elif bend = "7":
+			return self.canvas.create_line(prevX,prevY,curX,prevY,curX,curY,fill="#000000")
+		elif bend = "C":
+			outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
+			return self.canvas.create_line(prevX,prevY,prevX-outX,prevY,curX-outX,curY,curX,curY,fill="#000000")
+		elif bend = "-C":
+			outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
+			return self.canvas.create_line(prevX,prevY,prevX+outX,prevY,curX+outX,curY,curX,curY,fill="#000000")
+		else:
+			return self.canvas.create_line(prevX,prevY,curX,curY,fill="#000000")
 	
 	def openExpandedCode(event):
 		canvas = event.widget
@@ -48,11 +60,11 @@ class ChartWindow(Tkinter.Frame):
 		objId = canvas.find_withtag("current")[0]
 		
 		points = canvas.bbox(objId)
-		node = self.nodeDict[objId]
-		
-		text = node.description()		
 		x = (points[0] + points[2])/2
 		y = (points[1] + points[3])/2
+		
+		node = self.nodeDict[objId]
+		text = node.description()		
 		
 		textLabel = self.canvas.create_text(x,y,text=text,anchor="NW",font=CONST.FONT,fill="#000000",tags="ToolTip")
 		textBg = self.canvas.create_rectangle(self.canvas.bbox(textLabel),fill="white",tags="ToolTip")
@@ -84,15 +96,51 @@ def createFlowChart(chartWindow,nodes,prevX,prevY,curX,curY):
 		
 		
 		if node.__class__ is nodes.IfNode:
-			createFlowChart(chartWindow,node.branch[True],prevX-0,prevY-0,curX-0,curY-node.trueWidth()/2)
-			createFlowChart(chartWindow,node.branch[False],prevX-0,prevY-0,curX-0,curY+node.falseWidth()/2)
+			createFlowChart(chartWindow,node.branch[True],prevX-0,prevY-0,curX-node.trueWidth()/2,curY-0)
+			createFlowChart(chartWindow,node.branch[False],prevX-0,prevY-0,curX+node.falseWidth()/2,curY-0)
 		
 		if node.__class__ is nodes.EvaluateNode:
 			width = node.width()
-			whenCount = len(node.whenList)
+			arrangedWhen = []
 			for i,branch in enumerate(node.whenList):
-				createFlowChart(chartWindow,node.branch[True],prevX-0,prevY-0,curX-0,curY-100+(200/whenCount)*i)
+				breakFlag = False
+				for j,branch2 in enumerate(arrangedWhen):
+					if branch2.width() > branch.width():
+						arrangedWhen.insert(j,branch)
+						breakFlag = True
+						break
+				if not breakFlag:
+					arrangedWhen.append(branch)
 			
+			if len(node.whenList) % 2 == 1:
+				createFlowChart(chartWindow,arrangedWhen.pop().branch,prevX-0,prevY-0,curX-0,curY-0)
+			
+			if len(arrangedWhen):
+				reduceWidth = 0
+				branch = arrangedWhen.pop(0)
+				branchWidth = branch.width()
+				reduceWidth += branchWidth
+				createFlowChart(chartWindow,branch.branch,prevX-0,prevY-0,curX-width/2+branchWidth/2,curY-0)
+				branch = arrangedWhen.pop(0)
+				branchWidth = branch.width()
+				reduceWidth += branchWidth
+				createFlowChart(chartWindow,branch.branch,prevX-0,prevY-0,curX+width/2-branchWidth/2,curY-0)
+				width -= reduceWidth
+				
+			whenSpacing = (CONST.ICONWIDTH / 2)/(len(arrangedWhen) - 1)
+			whenSpacingStart = CONST.ICONWIDTH / 2
+			while len(arrangedWhen):
+				reduceWidth = 0
+				branch = arrangedWhen.pop(0)
+				branchWidth = branch.width()
+				reduceWidth += branchWidth
+				createFlowChart(chartWindow,branch.branch,prevX-whenSpacingStart,prevY-0,curX-width/2+branchWidth/2,curY-0)
+				branch = arrangedWhen.pop(0)
+				branchWidth = branch.width()
+				reduceWidth += branchWidth
+				createFlowChart(chartWindow,branch.branch,prevX+whenSpacingStart,prevY-0,curX+width/2-branchWidth/2,curY-0)
+				width -= reduceWidth
+				whenSpacingStart -= whenSpacing
 
 			
 			
