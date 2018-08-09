@@ -244,7 +244,18 @@ def createChart(PU,ignorePeriod=False):
 					createChart(PU,ignorePeriod)
 					inputLine = PU.peekCurrentStatement()
 					lineDict = digestSentence(inputLine)
-				
+			
+			#"other" branch always exists for evaluate
+			otherBranch = False
+			for whenbranch in tempObj.whenList:
+				for cond in whenbranch.condition:
+					if cond == "other":
+						otherBranch = True
+			if not otherBranch:
+				tempObj2 = nodes.WhenNode(PU,"other")
+				tempObj.whenList.append(tempObj2)
+			
+			
 			if lineDict["return statement"] in ["end-evaluate","."]:
 				programObj.append(tempObj)
 				tempObj = False

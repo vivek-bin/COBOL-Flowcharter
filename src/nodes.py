@@ -1,21 +1,39 @@
+import tkinter
+import constants as CONST
 
 class Node:
-	def __init__(self,PU):
+	idleIcon = False
+	hoverIcon = False
+	clickIcon = False
+	def __init__(self,PU,iconName=False):
 		self.paraStack = PU.paraStack[:]
 		self.lineNo = PU.programCounter
-		
+		if iconName:
+			self.loadIcons(iconName)
+	
+	def loadIcons(self,iconName):
+		if not idleIcon:
+			idleIcon = tkinter.PhotoImage(file=CONST.ICONS + iconName +"-idle.png")
+		if not hoverIcon:
+			hoverIcon = tkinter.PhotoImage(file=CONST.ICONS + iconName +"-hover.png")
+		if not clickIcon:
+			clickIcon = tkinter.PhotoImage(file=CONST.ICONS + iconName +"-click.png")
+	
+	def iconText(self):
+		return ""
+	
 	def description(self):
 		return ""
 		
 	def isEmpty(self):
 		return False
 		
-	def width():
-		return 20
+	def width(self):
+		return CONST.BRANCHWIDTH
 		
 class IfNode(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"branch")
 		self.condition = operand
 		self.branch = {}
 		self.branch[True] = []
@@ -31,23 +49,30 @@ class IfNode(Node):
 				flag = False
 		return flag	
 		
-	def width():
-		trueWidth = falseWidth = 0
+	def trueWidth(self):
+		width = 0
 		for n in branch[True]:
 			tempWidth = n.width()
-			if tempWidth > trueWidth:
-				trueWidth = tempWidth
+			if tempWidth > width:
+				width = tempWidth
 		
+		return width
+		
+	def falseWidth(self):
+		width = 0
 		for n in branch[False]:
 			tempWidth = n.width()
-			if tempWidth > falseWidth:
-				falseWidth = tempWidth
+			if tempWidth > width:
+				width = tempWidth
 		
-		return trueWidth + falseWidth
+		return width
+		
+	def width(self):
+		return trueWidth(self) + falseWidth(self)
 
 class EvaluateNode(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"multi")
 		self.condition = operand
 		self.whenList = []
 		
@@ -58,7 +83,7 @@ class EvaluateNode(Node):
 				flag = False
 		return flag
 		
-	def width():
+	def width(self):
 		finalWidth = 0
 		for whenBranch in whenList:
 			finalWidth += whenBranch.width()
@@ -67,7 +92,7 @@ class EvaluateNode(Node):
 	
 class WhenNode(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"info")
 		self.condition = [operand]
 		self.branch = []
 		
@@ -81,7 +106,7 @@ class WhenNode(Node):
 				flag = False
 		return flag
 	
-	def width():
+	def width(self):
 		w = 0
 		for n in branch:
 			tempWidth = n.width()
@@ -103,7 +128,7 @@ class LoopNode(Node):
 		return flag
 		
 	
-	def width():
+	def width(self):
 		w = 0
 		for n in branch:
 			tempWidth = n.width()
@@ -123,8 +148,7 @@ class NonLoopNode(Node):
 				flag = False
 		return flag
 	
-	
-	def width():
+	def width(self):
 		w = 0
 		for n in branch:
 			tempWidth = n.width()
@@ -134,11 +158,11 @@ class NonLoopNode(Node):
 		
 class GoToNode(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"process")
 		self.link = operand
 		self.branch = []
 	
-	def width():
+	def width(self):
 		w = 0
 		for n in branch:
 			tempWidth = n.width()
@@ -149,36 +173,43 @@ class GoToNode(Node):
 	
 class ParaNode(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"info")
 		self.paraName = operand
 		
 	def isEmpty(self):
 		return True
 		
-	def width():
+	def width(self):
 		return 10
 		
 class CallNode(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"module")
 		self.moduleName = operand
 		self.moduleNameVariable = operand
 	
+	def iconText(self):
+		return self.moduleName.upper()
+	
 class ExecNode(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"db")
 		self.type = operand
+	
+	def iconText(self):
+		return "TABLE"
 	
 class EndNode(Node):
 	def __init__(self,PU,operand=0):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"start")
 		self.errorEnd = operand
-
+		
+	def iconText(self):
+		return "STOP"
+	
 class LoopBreakPointer(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Node.__init__(self,PU,"info")
 		self.link = operand
-	
-	def width():
-		return 20 + 20
-		
+
+
