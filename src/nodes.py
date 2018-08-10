@@ -1,23 +1,18 @@
-import tkinter
+import Tkinter
 import constants as CONST
 
 class Node:
-	idleIcon = False
-	hoverIcon = False
-	clickIcon = False
 	def __init__(self,PU,iconName=False):
 		self.paraStack = PU.paraStack[:]
 		self.lineNo = PU.programCounter
+		self.idleIcon = self.hoverIcon = self.clickIcon = False
 		if iconName:
-			self.loadIcons(iconName)
-	
-	def loadIcons(self,iconName):
-		if not idleIcon:
-			idleIcon = tkinter.PhotoImage(file=CONST.ICONS + iconName +"-idle.png")
-		if not hoverIcon:
-			hoverIcon = tkinter.PhotoImage(file=CONST.ICONS + iconName +"-hover.png")
-		if not clickIcon:
-			clickIcon = tkinter.PhotoImage(file=CONST.ICONS + iconName +"-click.png")
+			if not self.idleIcon:
+				self.idleIcon = iconName + "-idle"
+			if not self.hoverIcon:
+				self.hoverIcon = iconName + "-hover"
+			if not self.clickIcon:
+				self.clickIcon = iconName + "-click"
 	
 	def iconText(self):
 		return ""
@@ -41,6 +36,7 @@ class Branch(Node):
 		for n in self.branch:
 			if not n.isEmpty():
 				flag = False
+				break
 		return flag
 	
 	def width(self):
@@ -60,15 +56,21 @@ class IfNode(Node):
 		self.branch[False] = IfBranch(PU,False)
 		
 	def isEmpty(self):
-		return self.branch[True].isEmpty() + self.branch[False].isEmpty()	
+		return self.branch[True].isEmpty() or self.branch[False].isEmpty()	
 		
 	def width(self):
 		return self.branch[True].width() + self.branch[False].width()
+		
+	def description(self):
+		return "IF " + self.condition.upper()
 		
 class IfBranch(Branch):
 	def __init__(self,PU,operand):
 		Branch.__init__(self,PU,"info")
 		self.condition = operand
+		
+	def description(self):
+		return self.condition.upper()
 			
 class EvaluateNode(Node):
 	def __init__(self,PU,operand):
@@ -81,6 +83,7 @@ class EvaluateNode(Node):
 		for n in self.whenList:
 			if not n.isEmpty():
 				flag = False
+				break
 		return flag
 		
 	def width(self):
@@ -89,6 +92,9 @@ class EvaluateNode(Node):
 			finalWidth += whenBranch.width()
 			
 		return finalWidth
+		
+	def description(self):
+		return "EVALUATE " + self.condition.upper()
 	
 class WhenBranch(Branch):
 	def __init__(self,PU,operand):
@@ -97,11 +103,21 @@ class WhenBranch(Branch):
 		
 	def addCondition(self,operand):
 		self.condition.append(operand)
+		
+	def description(self):
+		condition = self.condition[0]
+		for c in self.condition[1:]:
+			condition += "\n" + c
+			
+		return "WHEN " + condition.upper()
 	
 class LoopBranch(Branch):
 	def __init__(self,PU,operand):
 		Branch.__init__(self,PU,"info")
 		self.condition = operand
+		
+	def description(self):
+		return self.condition.upper()
 		
 class NonLoopBranch(Branch):
 	def __init__(self,PU):
@@ -111,15 +127,9 @@ class GoToBranch(Branch):
 	def __init__(self,PU,operand):
 		Branch.__init__(self,PU,"process")
 		self.link = operand
-	
-	def width(self):
-		w = 0
-		for n in self.branch:
-			tempWidth = n.width()
-			if tempWidth > w:
-				w = tempWidth
-	
-		return w + Node.width(self)
+		
+	def description(self):
+		return "GO TO " + self.link.upper()
 	
 class ParaNode(Node):
 	def __init__(self,PU,operand):
@@ -129,6 +139,9 @@ class ParaNode(Node):
 	def isEmpty(self):
 		return True
 		
+	def description(self):
+		return "PARA " + self.paraName.upper()
+		
 class CallNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU,"module")
@@ -137,14 +150,37 @@ class CallNode(Node):
 	
 	def iconText(self):
 		return self.moduleName.upper()
+		
+	def description(self):
+		return "double-click to open"
 	
 class ExecNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU,"db")
 		self.type = operand
+		self.table = ""
+		self.cursor = ""
+		self.query = ""
+	
 	
 	def iconText(self):
-		return "TABLE"
+		if self.table:
+			return self.table.upper()
+		elif self.cursor:
+			return self.cursor.upper()
+		else:
+			return"TABLE"
+		
+	def description(self):
+		l = ""
+		if self.table:
+			l += "TABLE: " + self.table.upper() + "\n"
+		if self.cursor:
+			l += "CURSOR: " + self.cursor.upper() + "\n"
+		if self.query:
+			l += "QUERY: " + self.query.upper() + "\n"
+		l = l[:-1]
+		return l
 	
 class EndNode(Node):
 	def __init__(self,PU,operand=0):
@@ -153,7 +189,7 @@ class EndNode(Node):
 		
 	def iconText(self):
 		return "STOP"
-	
+			
 class LoopBreakPointer(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU,"info")

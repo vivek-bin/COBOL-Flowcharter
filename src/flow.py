@@ -9,6 +9,7 @@ class ChartWindow(Tkinter.Frame):
 		self.nodeDict = {}
 		self.component = component
 		self.initUI()
+		self.loadIcons(self)
 	
 	def initUI(self):
 		self.parent.title(component.upper())
@@ -21,12 +22,18 @@ class ChartWindow(Tkinter.Frame):
 		self.canvas.tag_bind("HasDetails", "<Enter>", self.showToolTip)
 		self.canvas.tag_bind("HasDetails", "<Leave>", self.hideToolTip)
 		
+	def loadIcons(self):
+		self.icons = {}
+		for iType in ["branch","db","info","module","multi","process","start"]:
+			for state in ["idle","hover","click"]:
+				icons[iType+"-"+state] = = Tkinter.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
+		
 	def newBlock(self,node,x,y):
 		tags = ("JumpToLine","HasDetails")
 		
-		objIds = self.canvas.create_image(x,y,image=node.idleIcon,activeimage=node.hoverIcon,tags=tags)
+		objIds = self.canvas.create_image(x,y,image=self.icons[node.idleIcon],activeimage=self.icons[node.hoverIcon],tags=tags)
 		textId = self.canvas.create_text(x,y,text=node.iconText(),font=CONST.FONT,fill="#000000",tags=tags)
-			
+		
 		self.nodeDict[objId] = node
 		self.nodeDict[textId] = node
 		
@@ -224,8 +231,8 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 				
 	
 	return curX, curY
-			
-			
+
+
 def main(component="VIID246"):
 	root = Tkinter.Tk()
 	root.geometry('800x600+10+50')

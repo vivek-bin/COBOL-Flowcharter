@@ -103,7 +103,15 @@ def createChart(PU,ignorePeriod=False):
 			if "goback" in execDict:
 				lineDict["goback"] = execDict["goback"]
 				
-			programObj.append(nodes.ExecNode(PU,execDict["type"]))
+			if execDict["type"] == "sql":
+				tempObj2 = nodes.ExecNode(PU,execDict["type"])
+				if "cursor" in execDict:
+					tempObj2.cursor = execDict["cursor"]
+				if "table" in execDict:
+					tempObj2.table = execDict["table"]
+				if "query" in execDict:
+					tempObj2.query = execDict["query"]
+				programObj.append(tempObj2)
 		
 		
 		#point node
@@ -183,7 +191,7 @@ def createChart(PU,ignorePeriod=False):
 				if not awkwardReturnFlag:
 					while subChart and (subChart[-1].__class__ is nodes.LoopBranch or subChart[-1].__class__ is nodes.NonLoopBranch):
 						subChart = subChart[-1].branch
-					while subChart and (subChart[-1].__class__ is nodes.GoToNode or subChart[-1].__class__ is nodes.EndNode):
+					while subChart and (subChart[-1].__class__ is nodes.GoToBranch or subChart[-1].__class__ is nodes.EndNode):
 						subChart = createChart(PU,ignorePeriodSub)
 						while subChart and (subChart[-1].__class__ is nodes.LoopBranch or subChart[-1].__class__ is nodes.NonLoopBranch):
 							subChart = subChart[-1].branch
