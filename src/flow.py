@@ -80,27 +80,50 @@ class ChartWindow(Tkinter.Frame):
 			canvas.delete(objId)
 	
 	
-	
-def createFlowChart(chartWindow,nodes,prevX,prevY,curX,curY):
-	for node in nodes:
-		chartWindow.joiningLine(prevX,prevY,curX,curY)
-		prevX, prevY = curX, curY
-		curY += 30
+def createFlowChart(chartWindow,nodeList,curX,curY):
+	for node in nodeList:
 		
-		if node.__class__ is nodes.LoopNode:
-			createFlowChart(chartWindow,node.branch,prevX,prevY,curX,curY)
-		elif node.__class__ is nodes.NonLoopNode:
-			createFlowChart(chartWindow,node.branch,prevX,prevY,curX,curY)
+		if node.__class__ is nodes.NonLoopBranch:
+			curX, curY = createFlowChart(chartWindow,node.branch,curX,curY)
 		else:
+			prevX, prevY = curX, curY
+			curY += CONST.BLOCKHEIGHT
+			chartWindow.joiningLine(prevX,prevY,curX,curY)
 			chartWindow.newBlock(node,curX,curY)
+		
+		if node.__class__ is nodes.LoopBranch:
+			retX, retY = createFlowChart(chartWindow,node.branch,curX,curY)
+			chartWindow.joiningLine(curX,curY,retX,retY,"-C")
+			
+			curY = retY
 		
 		
 		if node.__class__ is nodes.IfNode:
-			createFlowChart(chartWindow,node.branch[True],prevX-0,prevY-0,curX-node.trueWidth()/2,curY-0)
-			createFlowChart(chartWindow,node.branch[False],prevX-0,prevY-0,curX+node.falseWidth()/2,curY-0)
+			prevX, prevY = curX, curY
+			
+			curXT = curX - node.branch[True].width()/2
+			curYT = curY + CONST.BLOCKHEIGHT
+			chartWindow.joiningLine(prevX,prevY,curXT,curYT,"7")
+			chartWindow.newBlock(node.branch[True],curXT,curYT)
+			curXT, curYT = createFlowChart(chartWindow,node.branch[True].branch,curXT,curYT)
+			
+			
+			curXF = curX + node.branch[False].width()/2
+			curYF = curY + CONST.BLOCKHEIGHT
+			chartWindow.joiningLine(prevX,prevY,curXF,curYF,"7")
+			chartWindow.newBlock(node.branch[False],curXF,curYF)
+			curXF, curYF = createFlowChart(chartWindow,node.branch[False].branch,curXF,curYF)
+			
+			if curYT < curYF:
+				chartWindow.joiningLine(curXT,curYT,curXT,curYF)
+			elif curYF < curYT:
+				chartWindow.joiningLine(curXF,curYT,curXF,curYF)
+			chartWindow.joiningLine(curXF,curYF,curXT,curYT)
+			
+			curY = curYT
+			
 		
 		if node.__class__ is nodes.EvaluateNode:
-			width = node.width()
 			arrangedWhen = []
 			for i,branch in enumerate(node.whenList):
 				breakFlag = False
@@ -112,36 +135,95 @@ def createFlowChart(chartWindow,nodes,prevX,prevY,curX,curY):
 				if not breakFlag:
 					arrangedWhen.append(branch)
 			
-			if len(node.whenList) % 2 == 1:
-				createFlowChart(chartWindow,arrangedWhen.pop().branch,prevX-0,prevY-0,curX-0,curY-0)
 			
+			prevX, prevY = curX, curY
+			branchEndPoints = []
+			
+			if len(arrangedWhen) % 2:
+				newNode = arrangedWhen.pop()
+				curXT = curX - 0
+				curYT = curY + CONST.BLOCKHEIGHT
+				chartWindow.joiningLine(prevX,prevY,curXT,curYT)
+				chartWindow.newBlock(newNode,curXT,curYT)
+				endPoints = createFlowChart(chartWindow,newNode.branch,curXT,curYT)
+				branchEndPoints.append(endPoints)
+			
+			width = node.width()
 			if len(arrangedWhen):
 				reduceWidth = 0
-				branch = arrangedWhen.pop(0)
-				branchWidth = branch.width()
-				reduceWidth += branchWidth
-				createFlowChart(chartWindow,branch.branch,prevX-0,prevY-0,curX-width/2+branchWidth/2,curY-0)
-				branch = arrangedWhen.pop(0)
-				branchWidth = branch.width()
-				reduceWidth += branchWidth
-				createFlowChart(chartWindow,branch.branch,prevX-0,prevY-0,curX+width/2-branchWidth/2,curY-0)
-				width -= reduceWidth
 				
-			whenSpacing = (CONST.ICONWIDTH / 2)/(len(arrangedWhen) - 1)
-			whenSpacingStart = CONST.ICONWIDTH / 2
+				newNode = arrangedWhen.pop(0)
+				branchWidth = newNode.width()
+				reduceWidth += branchWidth
+				curXT = curX - width/2 + branchWidth/2
+				curYT = curY + CONST.BLOCKHEIGHT
+				chartWindow.joiningLine(prevX,prevY,curXT,curYT,"7")
+				chartWindow.newBlock(newNode,curXT,curYT)
+				endPoints = createFlowChart(chartWindow,newNode.branch,curXT,curYT)
+				branchEndPoints.append(endPoints)
+				
+				newNode = arrangedWhen.pop(0)
+				branchWidth = newNode.width()
+				reduceWidth += branchWidth
+				curXT = curX + width/2 - branchWidth/2
+				curYT = curY + CONST.BLOCKHEIGHT
+				chartWindow.joiningLine(prevX,prevY,curXT,curYT,"7")
+				chartWindow.newBlock(newNode,curXT,curYT)
+				endPoints = createFlowChart(chartWindow,newNode.branch,curXT,curYT)
+				branchEndPoints.append(endPoints)
+				
+				width -= reduceWidth
+			
+			if len(arrangedWhen):
+				whenSpacing = (CONST.ICONWIDTH / 2)/(len(arrangedWhen) - 1 + (len(node.whenList) % 2))
+				whenSpacingStart = CONST.ICONWIDTH / 2
 			while len(arrangedWhen):
 				reduceWidth = 0
-				branch = arrangedWhen.pop(0)
-				branchWidth = branch.width()
+				
+				newNode = arrangedWhen.pop(0)
+				branchWidth = newNode.width()
 				reduceWidth += branchWidth
-				createFlowChart(chartWindow,branch.branch,prevX-whenSpacingStart,prevY-0,curX-width/2+branchWidth/2,curY-0)
-				branch = arrangedWhen.pop(0)
-				branchWidth = branch.width()
+				curXT = curX - width/2 + branchWidth/2
+				curYT = curY + CONST.BLOCKHEIGHT
+				chartWindow.joiningLine(prevX - whenSpacingStart,prevY,curXT,curYT,"N")
+				chartWindow.newBlock(newNode,curXT,curYT)
+				endPoints = createFlowChart(chartWindow,newNode.branch,curXT,curYT)
+				branchEndPoints.append(endPoints)
+				
+				newNode = arrangedWhen.pop(0)
+				branchWidth = newNode.width()
 				reduceWidth += branchWidth
-				createFlowChart(chartWindow,branch.branch,prevX+whenSpacingStart,prevY-0,curX+width/2-branchWidth/2,curY-0)
+				curXT = curX + width/2 - branchWidth/2
+				curYT = curY + CONST.BLOCKHEIGHT
+				chartWindow.joiningLine(prevX + whenSpacingStart,prevY,curXT,curYT,"N")
+				chartWindow.newBlock(newNode,curXT,curYT)
+				endPoints = createFlowChart(chartWindow,newNode.branch,curXT,curYT)
+				branchEndPoints.append(endPoints)
+				
 				width -= reduceWidth
 				whenSpacingStart -= whenSpacing
-
+				
+			minX =  99999999
+			maxX = maxY = -1
+			for point in branchEndPoints:
+				if point[0] < minX:
+					minX = point[0]
+			for point in branchEndPoints:
+				if point[0] > maxX:
+					maxX = point[0]
+			for point in branchEndPoints:
+				if point[1] > maxY:
+					maxY = point[1]
+			
+			for point in branchEndPoints:
+				if point[1] != maxY:
+					chartWindow.joiningLine(point[0],point[1],point[0],maxY)
+			chartWindow.joiningLine(minX,maxY,maxX,maxY)
+			
+			curY = maxY
+				
+	
+	return curX, curY
 			
 			
 def main(component="VIID246"):

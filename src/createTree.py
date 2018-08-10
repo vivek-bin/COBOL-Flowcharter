@@ -126,7 +126,7 @@ def createChart(PU,ignorePeriod=False):
 		if "goback" in lineDict:
 			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
 		if "go to" in lineDict:
-			tempObj = nodes.GoToNode(PU,lineDict["go to"])
+			tempObj = nodes.GoToBranch(PU,lineDict["go to"])
 			
 			goToPU = ProcessingUnit(PU)
 			goToPU.jumpToPara(lineDict["go to"])
@@ -144,9 +144,9 @@ def createChart(PU,ignorePeriod=False):
 		#perform nodes
 		if "perform" in lineDict:
 			if "until" in lineDict:
-				tempObj = nodes.LoopNode(PU,lineDict["until"])
+				tempObj = nodes.LoopBranch(PU,lineDict["until"])
 			else:
-				tempObj = nodes.NonLoopNode(PU)
+				tempObj = nodes.NonLoopBranch(PU)
 			
 			paraAlreadyInPath = False
 			if lineDict["perform"] is not True:
@@ -181,11 +181,11 @@ def createChart(PU,ignorePeriod=False):
 					inputLine = PU.peekCurrentStatement()
 					lineDict = digestSentence(inputLine)
 				if not awkwardReturnFlag:
-					while subChart and (subChart[-1].__class__ is nodes.LoopNode or subChart[-1].__class__ is nodes.NonLoopNode):
+					while subChart and (subChart[-1].__class__ is nodes.LoopBranch or subChart[-1].__class__ is nodes.NonLoopBranch):
 						subChart = subChart[-1].branch
 					while subChart and (subChart[-1].__class__ is nodes.GoToNode or subChart[-1].__class__ is nodes.EndNode):
 						subChart = createChart(PU,ignorePeriodSub)
-						while subChart and (subChart[-1].__class__ is nodes.LoopNode or subChart[-1].__class__ is nodes.NonLoopNode):
+						while subChart and (subChart[-1].__class__ is nodes.LoopBranch or subChart[-1].__class__ is nodes.NonLoopBranch):
 							subChart = subChart[-1].branch
 			
 			if "." in lineDict and not ignorePeriod:
@@ -203,8 +203,12 @@ def createChart(PU,ignorePeriod=False):
 			ifCondition = "if" in lineDict
 			if ifCondition:
 				tempObj = nodes.IfNode(PU,lineDict["if"])
+			
 			subChart = createChart(PU)
-			tempObj.branch[ifCondition] = subChart
+			
+			tempObj2 = nodes.IfBranch(PU,ifCondition)
+			tempObj2.branch = subChart
+			tempObj.branch[ifCondition] = tempObj2
 			
 			inputLine = PU.peekCurrentStatement()
 			lineDict = digestSentence(inputLine)
@@ -218,7 +222,7 @@ def createChart(PU,ignorePeriod=False):
 				programObj.append(tempObj)
 				tempObj = False
 				if "." in lineDict and not ignorePeriod:
-					break				
+					break
 		if "." in lineDict and not ignorePeriod:
 			break
 			
@@ -228,7 +232,7 @@ def createChart(PU,ignorePeriod=False):
 			lineDict = digestSentence(inputLine)
 		
 			while "when" in lineDict:
-				tempObj2 = nodes.WhenNode(PU,lineDict["when"])
+				tempObj2 = nodes.WhenBranch(PU,lineDict["when"])
 				while "when" in digestSentence(PU.peekNextStatement()):
 					inputLine = PU.getNextStatement()
 					lineDict = digestSentence(inputLine)
@@ -252,7 +256,7 @@ def createChart(PU,ignorePeriod=False):
 					if cond == "other":
 						otherBranch = True
 			if not otherBranch:
-				tempObj2 = nodes.WhenNode(PU,"other")
+				tempObj2 = nodes.WhenBranch(PU,"other")
 				tempObj.whenList.append(tempObj2)
 			
 			

@@ -31,45 +31,45 @@ class Node:
 	def width(self):
 		return CONST.BRANCHWIDTH
 		
+class Branch(Node):
+	def __init__(self,PU,iconName=False):
+		Node.__init__(self,PU,iconName)
+		self.branch = []
+		
+	def isEmpty(self):
+		flag = True
+		for n in self.branch:
+			if not n.isEmpty():
+				flag = False
+		return flag
+	
+	def width(self):
+		w = 0
+		for n in self.branch:
+			tempWidth = n.width()
+			if tempWidth > w:
+				w = tempWidth
+		return w
+		
 class IfNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU,"branch")
 		self.condition = operand
 		self.branch = {}
-		self.branch[True] = []
-		self.branch[False] = []
+		self.branch[True] = IfBranch(PU,True)
+		self.branch[False] = IfBranch(PU,False)
 		
 	def isEmpty(self):
-		flag = True
-		for n in self.branch[True]:
-			if not n.isEmpty():
-				flag = False
-		for n in self.branch[False]:
-			if not n.isEmpty():
-				flag = False
-		return flag	
-		
-	def trueWidth(self):
-		width = 0
-		for n in branch[True]:
-			tempWidth = n.width()
-			if tempWidth > width:
-				width = tempWidth
-		
-		return width
-		
-	def falseWidth(self):
-		width = 0
-		for n in branch[False]:
-			tempWidth = n.width()
-			if tempWidth > width:
-				width = tempWidth
-		
-		return width
+		return self.branch[True].isEmpty() + self.branch[False].isEmpty()	
 		
 	def width(self):
-		return trueWidth(self) + falseWidth(self)
-
+		return self.branch[True].width() + self.branch[False].width()
+		
+class IfBranch(Branch):
+	def __init__(self,PU,operand):
+		Branch.__init__(self,PU,"info")
+		self.condition = operand
+			
 class EvaluateNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU,"multi")
@@ -90,81 +90,31 @@ class EvaluateNode(Node):
 			
 		return finalWidth
 	
-class WhenNode(Node):
+class WhenBranch(Branch):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"info")
+		Branch.__init__(self,PU,"info")
 		self.condition = [operand]
-		self.branch = []
 		
 	def addCondition(self,operand):
 		self.condition.append(operand)
-		
-	def isEmpty(self):
-		flag = True
-		for n in self.branch:
-			if not n.isEmpty():
-				flag = False
-		return flag
 	
-	def width(self):
-		w = 0
-		for n in branch:
-			tempWidth = n.width()
-			if tempWidth > w:
-				w = tempWidth
-		return w
-	
-class LoopNode(Node):
+class LoopBranch(Branch):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU)
+		Branch.__init__(self,PU,"info")
 		self.condition = operand
-		self.branch = []
 		
-	def isEmpty(self):
-		flag = True
-		for n in self.branch:
-			if not n.isEmpty():
-				flag = False
-		return flag
-		
-	
-	def width(self):
-		w = 0
-		for n in branch:
-			tempWidth = n.width()
-			if tempWidth > w:
-				w = tempWidth
-		return w + 20
-		
-class NonLoopNode(Node):
+class NonLoopBranch(Branch):
 	def __init__(self,PU):
-		Node.__init__(self,PU)
-		self.branch = []
+		Branch.__init__(self,PU)
 		
-	def isEmpty(self):
-		flag = True
-		for n in self.branch:
-			if not n.isEmpty():
-				flag = False
-		return flag
-	
-	def width(self):
-		w = 0
-		for n in branch:
-			tempWidth = n.width()
-			if tempWidth > w:
-				w = tempWidth
-		return w
-		
-class GoToNode(Node):
+class GoToBranch(Branch):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"process")
+		Branch.__init__(self,PU,"process")
 		self.link = operand
-		self.branch = []
 	
 	def width(self):
 		w = 0
-		for n in branch:
+		for n in self.branch:
 			tempWidth = n.width()
 			if tempWidth > w:
 				w = tempWidth
