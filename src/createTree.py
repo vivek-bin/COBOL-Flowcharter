@@ -482,7 +482,7 @@ def getChart(component):
 	#file = fileaccess.loadDATA("test")
 	
 	PU, fChart = generateChart(file)
-	fileaccess.writePickle(component,fChart)
+	#fileaccess.writePickle(component,fChart)
 	#f2 = fileaccess.loadPickle(component)
 	
 	fileaccess.closeLib(fileaccess.PROCESSING)

@@ -1,6 +1,7 @@
 import constants as CONST
 import os
 import Tkinter
+import createTree
 
 class ChartWindow(Tkinter.Frame):
 	def __init__(self, parent,component):
@@ -9,10 +10,10 @@ class ChartWindow(Tkinter.Frame):
 		self.nodeDict = {}
 		self.component = component
 		self.initUI()
-		self.loadIcons(self)
+		self.loadIcons()
 	
 	def initUI(self):
-		self.parent.title(component.upper())
+		self.parent.title(self.component.upper())
 		self.config(bg = '#F0F0F0')
 		self.pack(fill = Tkinter.BOTH, expand = 1)
 		#create canvas
@@ -26,7 +27,7 @@ class ChartWindow(Tkinter.Frame):
 		self.icons = {}
 		for iType in ["branch","db","info","module","multi","process","start"]:
 			for state in ["idle","hover","click"]:
-				icons[iType+"-"+state] = = Tkinter.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
+				icons[iType+"-"+state] = Tkinter.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
 		
 	def newBlock(self,node,x,y):
 		tags = ("JumpToLine","HasDetails")
@@ -38,15 +39,15 @@ class ChartWindow(Tkinter.Frame):
 		self.nodeDict[textId] = node
 		
 	def joiningLine(self,prevX,prevY,curX,curY,bend=False):
-		if bend = "N":
+		if bend == "N":
 			midY = (prevY + curY)/2
 			return self.canvas.create_line(prevX,prevY,prevX,midY,curX,midY,curX,curY,fill="#000000")
-		elif bend = "7":
+		elif bend == "7":
 			return self.canvas.create_line(prevX,prevY,curX,prevY,curX,curY,fill="#000000")
-		elif bend = "C":
+		elif bend == "C":
 			outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
 			return self.canvas.create_line(prevX,prevY,prevX-outX,prevY,curX-outX,curY,curX,curY,fill="#000000")
-		elif bend = "-C":
+		elif bend == "-C":
 			outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
 			return self.canvas.create_line(prevX,prevY,prevX+outX,prevY,curX+outX,curY,curX,curY,fill="#000000")
 		else:
@@ -234,9 +235,11 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 
 
 def main(component="VIID246"):
+	nodes = createTree.getChart(component)
 	root = Tkinter.Tk()
 	root.geometry('800x600+10+50')
 	app = ChartWindow(root,component)
+	createFlowChart(app,nodes,400,0)
 	app.mainloop()
 	root.destroy()
 

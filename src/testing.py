@@ -3,6 +3,7 @@ import fileaccess
 import os
 import time
 import tooltip
+import constants as CONST
 	
 def t9(component="VIID246"):
 	startTime = time.time()
@@ -28,6 +29,9 @@ canvas.create_rectangle(10, 100, 110, 150, outline="blue")
 canvas.create_text(60, 125, text="Rectangle")
 canvas.create_line(60, 60, 60, 100, width=3)
 canvas.try1234vivek = "jk"
+
+icon = PhotoImage(file=CONST.ICONS + "branch-idle.png")
+
 class MouseMover():
     def __init__(self):
         self.item = 0; self.previous = (0, 0)
