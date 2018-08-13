@@ -39,6 +39,7 @@ class ProgramProcessingFile:
 	def setProcedureDivision(self):
 		i = self.searchFile("procedure division")
 		self.procedureDivision = self.inputFile[i+1:]
+		self.procedureDivisionLineNo = self.inputFileLineNo[i+1:]
 	
 	def setDivisions(self):
 		self.setIdentificationDivision()
@@ -77,6 +78,7 @@ class ProgramProcessingFile:
 		self.environmentDivision = []
 		self.dataDivision = []
 		self.procedureDivision = []
+		self.procedureDivisionLineNo = []
 		self.paraStart = {}
 		self.paraEnd = {}
 		

@@ -1,7 +1,11 @@
 import constants as CONST
 import os
+import subprocess
 import Tkinter
+import nodes
 import createTree
+import fileaccess
+from PIL import ImageTk
 
 class ChartWindow(Tkinter.Frame):
 	def __init__(self, parent,component):
@@ -17,7 +21,7 @@ class ChartWindow(Tkinter.Frame):
 		self.config(bg = '#F0F0F0')
 		self.pack(fill = Tkinter.BOTH, expand = 1)
 		#create canvas
-		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 180, height = 500)
+		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 1000)
 		self.canvas.pack(side = Tkinter.TOP, anchor = Tkinter.NW, padx = 10, pady = 10)
 		self.canvas.tag_bind("JumpToLine", "<ButtonPress-1>", self.openExpandedCode)
 		self.canvas.tag_bind("HasDetails", "<Enter>", self.showToolTip)
@@ -27,60 +31,61 @@ class ChartWindow(Tkinter.Frame):
 		self.icons = {}
 		for iType in ["branch","db","info","module","multi","process","start"]:
 			for state in ["idle","hover","click"]:
-				icons[iType+"-"+state] = Tkinter.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
+				self.icons[iType+"-"+state] = ImageTk.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
 		
 	def newBlock(self,node,x,y):
 		tags = ("JumpToLine","HasDetails")
 		
-		objIds = self.canvas.create_image(x,y,image=self.icons[node.idleIcon],activeimage=self.icons[node.hoverIcon],tags=tags)
-		textId = self.canvas.create_text(x,y,text=node.iconText(),font=CONST.FONT,fill="#000000",tags=tags)
+		objId = self.canvas.create_image(x,y,image=self.icons[node.idleIcon],activeimage=self.icons[node.hoverIcon],tags=tags)
+		textId = self.canvas.create_text(x,y,text=node.iconText(),font=CONST.FONT,fill="#000000",state=Tkinter.DISABLED)
 		
 		self.nodeDict[objId] = node
-		self.nodeDict[textId] = node
 		
 	def joiningLine(self,prevX,prevY,curX,curY,bend=False):
+		tags = "Lines"
 		if bend == "N":
 			midY = (prevY + curY)/2
-			return self.canvas.create_line(prevX,prevY,prevX,midY,curX,midY,curX,curY,fill="#000000")
+			return self.canvas.create_line(prevX,prevY,prevX,midY,curX,midY,curX,curY,fill="#000000",tags=tags)
 		elif bend == "7":
-			return self.canvas.create_line(prevX,prevY,curX,prevY,curX,curY,fill="#000000")
+			return self.canvas.create_line(prevX,prevY,curX,prevY,curX,curY,fill="#000000",tags=tags)
 		elif bend == "C":
 			outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
-			return self.canvas.create_line(prevX,prevY,prevX-outX,prevY,curX-outX,curY,curX,curY,fill="#000000")
+			return self.canvas.create_line(prevX,prevY,prevX-outX,prevY,curX-outX,curY,curX,curY,fill="#000000",tags=tags)
 		elif bend == "-C":
 			outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
-			return self.canvas.create_line(prevX,prevY,prevX+outX,prevY,curX+outX,curY,curX,curY,fill="#000000")
+			return self.canvas.create_line(prevX,prevY,prevX+outX,prevY,curX+outX,curY,curX,curY,fill="#000000",tags=tags)
 		else:
-			return self.canvas.create_line(prevX,prevY,curX,curY,fill="#000000")
+			return self.canvas.create_line(prevX,prevY,curX,curY,fill="#000000",tags=tags)
+			
+		self.canvas.tag_lower(tags)
 	
-	def openExpandedCode(event):
+	def openExpandedCode(self,event):
 		canvas = event.widget
 		objId = canvas.find_withtag("current")[0]
 		
 		node = self.nodeDict[objId]
 		componentLocation = '"' + fileaccess.extractExpandedFile(self.component) + '"'
 		lineNo = "-n" + str(node.lineNo)
-		command = CONST.NPLOCATION + " " +  componentLocation + " " + lineNo
-		os.system(command)
+		command = "\"" + CONST.NPLOCATION + "\"" +  " " +  componentLocation + " " + lineNo
+		
+		subprocess.call(command)
 	
-	def showToolTip(event):
+	def showToolTip(self,event):
 		canvas = event.widget
 		objId = canvas.find_withtag("current")[0]
 		
 		points = canvas.bbox(objId)
-		x = (points[0] + points[2])/2
-		y = (points[1] + points[3])/2
+		x = (points[0] + points[2])/2 + 50
+		y = (points[1] + points[3])/2 + 50
 		
 		node = self.nodeDict[objId]
 		text = node.description()		
 		
-		textLabel = self.canvas.create_text(x,y,text=text,anchor="NW",font=CONST.FONT,fill="#000000",tags="ToolTip")
+		textLabel = self.canvas.create_text(x,y,text=text,anchor="nw",font=CONST.FONT,fill="#000000",tags="ToolTip")
 		textBg = self.canvas.create_rectangle(self.canvas.bbox(textLabel),fill="white",tags="ToolTip")
 		self.canvas.tag_lower(textBg,textLabel)
 		
-		return (textLabel,textBg)
-	
-	def hideToolTip(event):
+	def hideToolTip(self,event):
 		canvas = event.widget
 		objIds = canvas.find_withtag("ToolTip")
 		
@@ -90,6 +95,9 @@ class ChartWindow(Tkinter.Frame):
 	
 def createFlowChart(chartWindow,nodeList,curX,curY):
 	for node in nodeList:
+		if node.__class__ is nodes.ParaNode:
+			continue
+		
 		
 		if node.__class__ is nodes.NonLoopBranch:
 			curX, curY = createFlowChart(chartWindow,node.branch,curX,curY)
@@ -239,8 +247,10 @@ def main(component="VIID246"):
 	root = Tkinter.Tk()
 	root.geometry('800x600+10+50')
 	app = ChartWindow(root,component)
-	createFlowChart(app,nodes,400,0)
+	createFlowChart(app,nodes,300,20)
 	app.mainloop()
-	root.destroy()
+	#root.destroy()
+	
+	return nodes
 
-main()
+n=main()

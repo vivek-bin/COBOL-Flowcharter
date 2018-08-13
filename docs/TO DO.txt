@@ -3,13 +3,10 @@ generating tree
 - handle/test go to's
 - aib018y	- infinite loop
 			- another program starts at the bottom, how is this handled?
-- collect all calls
-- collect all table accesses with the type
 - add details for exec blocks
 
 
 generating flowchart
-- *all*
 - "C:\Program Files\Notepad++\notepad++.exe" "d:\Profiles\vbindal\Desktop\2389 email jcl.txt" -n65
 - loopbreakpointer, goto, loop
 

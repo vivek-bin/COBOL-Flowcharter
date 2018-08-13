@@ -22,8 +22,8 @@ DATA = PROJECT + "DATA\\"
 
 ZEROPAD = 8
 
-FONT = "Courier New"
-NPLOCATION = '"C:\\Program Files\\Notepad++\\notepad++.exe"'
+FONT = ("Courier New",12,"bold")
+NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
 
 BRANCHSPACE = 10

@@ -4,7 +4,8 @@ import constants as CONST
 class Node:
 	def __init__(self,PU,iconName=False):
 		self.paraStack = PU.paraStack[:]
-		self.lineNo = PU.programCounter
+		self.lineNo = int(PU.inputFile.procedureDivisionLineNo[PU.processedLines[-1]]) + 1
+		
 		self.idleIcon = self.hoverIcon = self.clickIcon = False
 		if iconName:
 			if not self.idleIcon:
@@ -70,7 +71,7 @@ class IfBranch(Branch):
 		self.condition = operand
 		
 	def description(self):
-		return self.condition.upper()
+		return str(self.condition).upper()
 			
 class EvaluateNode(Node):
 	def __init__(self,PU,operand):
@@ -88,7 +89,7 @@ class EvaluateNode(Node):
 		
 	def width(self):
 		finalWidth = 0
-		for whenBranch in whenList:
+		for whenBranch in self.whenList:
 			finalWidth += whenBranch.width()
 			
 		return finalWidth
