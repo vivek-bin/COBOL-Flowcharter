@@ -73,6 +73,13 @@ class IfBranch(Branch):
 	def description(self):
 		return str(self.condition).upper()
 			
+	def width(self):
+		w = Branch.width(self)
+		if w > CONST.ICONWIDTH:
+			return w
+		else:
+			return CONST.ICONWIDTH
+	
 class EvaluateNode(Node):
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU,"multi")
@@ -111,6 +118,13 @@ class WhenBranch(Branch):
 			condition += "\n" + c
 			
 		return "WHEN " + condition.upper()
+		
+	def width(self):
+		w = Branch.width(self)
+		if w > CONST.ICONWIDTH:
+			return w
+		else:
+			return CONST.ICONWIDTH
 	
 class LoopBranch(Branch):
 	def __init__(self,PU,operand):

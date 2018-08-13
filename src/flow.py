@@ -15,13 +15,14 @@ class ChartWindow(Tkinter.Frame):
 		self.component = component
 		self.initUI()
 		self.loadIcons()
+		self.toolTip = []
 	
 	def initUI(self):
 		self.parent.title(self.component.upper())
 		self.config(bg = '#F0F0F0')
 		self.pack(fill = Tkinter.BOTH, expand = 1)
 		#create canvas
-		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 1000)
+		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 10000)
 		self.canvas.pack(side = Tkinter.TOP, anchor = Tkinter.NW, padx = 10, pady = 10)
 		self.canvas.tag_bind("JumpToLine", "<ButtonPress-1>", self.openExpandedCode)
 		self.canvas.tag_bind("HasDetails", "<Enter>", self.showToolTip)
@@ -32,7 +33,7 @@ class ChartWindow(Tkinter.Frame):
 		for iType in ["branch","db","info","module","multi","process","start"]:
 			for state in ["idle","hover","click"]:
 				self.icons[iType+"-"+state] = ImageTk.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
-		
+				
 	def newBlock(self,node,x,y):
 		tags = ("JumpToLine","HasDetails")
 		
@@ -43,21 +44,23 @@ class ChartWindow(Tkinter.Frame):
 		
 	def joiningLine(self,prevX,prevY,curX,curY,bend=False):
 		tags = "Lines"
+		lineId = False
 		if bend == "N":
 			midY = (prevY + curY)/2
-			return self.canvas.create_line(prevX,prevY,prevX,midY,curX,midY,curX,curY,fill="#000000",tags=tags)
+			lineId = self.canvas.create_line(prevX,prevY,prevX,midY,curX,midY,curX,curY,fill="#000000",tags=tags)
 		elif bend == "7":
-			return self.canvas.create_line(prevX,prevY,curX,prevY,curX,curY,fill="#000000",tags=tags)
+			lineId = self.canvas.create_line(prevX,prevY,curX,prevY,curX,curY,fill="#000000",tags=tags)
 		elif bend == "C":
 			outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
-			return self.canvas.create_line(prevX,prevY,prevX-outX,prevY,curX-outX,curY,curX,curY,fill="#000000",tags=tags)
+			lineId = self.canvas.create_line(prevX,prevY,prevX-outX,prevY,curX-outX,curY,curX,curY,fill="#000000",tags=tags)
 		elif bend == "-C":
 			outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
-			return self.canvas.create_line(prevX,prevY,prevX+outX,prevY,curX+outX,curY,curX,curY,fill="#000000",tags=tags)
+			lineId = self.canvas.create_line(prevX,prevY,prevX+outX,prevY,curX+outX,curY,curX,curY,fill="#000000",tags=tags)
 		else:
-			return self.canvas.create_line(prevX,prevY,curX,curY,fill="#000000",tags=tags)
+			lineId = self.canvas.create_line(prevX,prevY,curX,curY,fill="#000000",tags=tags)
 			
 		self.canvas.tag_lower(tags)
+		return lineId
 	
 	def openExpandedCode(self,event):
 		canvas = event.widget
@@ -74,20 +77,27 @@ class ChartWindow(Tkinter.Frame):
 		canvas = event.widget
 		objId = canvas.find_withtag("current")[0]
 		
+		if objId in self.toolTip:
+			return
+		
+		self.toolTip.append(objId)
+		
 		points = canvas.bbox(objId)
-		x = (points[0] + points[2])/2 + 50
-		y = (points[1] + points[3])/2 + 50
+		x = (points[0] + points[2])/2
+		y = (points[1] + points[3])/2
 		
 		node = self.nodeDict[objId]
 		text = node.description()		
 		
-		textLabel = self.canvas.create_text(x,y,text=text,anchor="nw",font=CONST.FONT,fill="#000000",tags="ToolTip")
-		textBg = self.canvas.create_rectangle(self.canvas.bbox(textLabel),fill="white",tags="ToolTip")
+		textLabel = self.canvas.create_text(x,y,text=text,anchor="nw",font=CONST.FONT,fill="#000000",tags="ToolTip",state=Tkinter.DISABLED)
+		textBg = self.canvas.create_rectangle(self.canvas.bbox(textLabel),fill="white",tags="ToolTip",state=Tkinter.DISABLED)
 		self.canvas.tag_lower(textBg,textLabel)
 		
 	def hideToolTip(self,event):
 		canvas = event.widget
 		objIds = canvas.find_withtag("ToolTip")
+		
+		self.toolTip = []
 		
 		for objId in objIds:
 			canvas.delete(objId)
@@ -151,11 +161,10 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 				if not breakFlag:
 					arrangedWhen.append(branch)
 			
-			
 			prevX, prevY = curX, curY
 			branchEndPoints = []
 			
-			if len(arrangedWhen) % 2:
+			if len(arrangedWhen) % 2 == 1:
 				newNode = arrangedWhen.pop()
 				curXT = curX - 0
 				curYT = curY + CONST.BLOCKHEIGHT
@@ -178,6 +187,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 				endPoints = createFlowChart(chartWindow,newNode.branch,curXT,curYT)
 				branchEndPoints.append(endPoints)
 				
+				
 				newNode = arrangedWhen.pop(0)
 				branchWidth = newNode.width()
 				reduceWidth += branchWidth
@@ -187,6 +197,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 				chartWindow.newBlock(newNode,curXT,curYT)
 				endPoints = createFlowChart(chartWindow,newNode.branch,curXT,curYT)
 				branchEndPoints.append(endPoints)
+				
 				
 				width -= reduceWidth
 			
@@ -199,7 +210,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 				newNode = arrangedWhen.pop(0)
 				branchWidth = newNode.width()
 				reduceWidth += branchWidth
-				curXT = curX - width/2 + branchWidth/2
+				curXT = curX - width/2 + branchWidth/2 - CONST.BRANCHWIDTH
 				curYT = curY + CONST.BLOCKHEIGHT
 				chartWindow.joiningLine(prevX - whenSpacingStart,prevY,curXT,curYT,"N")
 				chartWindow.newBlock(newNode,curXT,curYT)
@@ -209,7 +220,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 				newNode = arrangedWhen.pop(0)
 				branchWidth = newNode.width()
 				reduceWidth += branchWidth
-				curXT = curX + width/2 - branchWidth/2
+				curXT = curX + width/2 - branchWidth/2 + CONST.BRANCHWIDTH
 				curYT = curY + CONST.BLOCKHEIGHT
 				chartWindow.joiningLine(prevX + whenSpacingStart,prevY,curXT,curYT,"N")
 				chartWindow.newBlock(newNode,curXT,curYT)
@@ -245,7 +256,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 def main(component="VIID246"):
 	nodes = createTree.getChart(component)
 	root = Tkinter.Tk()
-	root.geometry('800x600+10+50')
+	#root.geometry('800x600+10+50')
 	app = ChartWindow(root,component)
 	createFlowChart(app,nodes,300,20)
 	app.mainloop()
