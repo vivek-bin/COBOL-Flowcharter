@@ -41,7 +41,7 @@ class Branch(Node):
 		return flag
 	
 	def width(self):
-		w = 0
+		w = CONST.BRANCHWIDTH
 		for n in self.branch:
 			tempWidth = n.width()
 			if tempWidth > w:
@@ -73,16 +73,9 @@ class IfBranch(Branch):
 	def description(self):
 		return str(self.condition).upper()
 			
-	def width(self):
-		w = Branch.width(self)
-		if w > CONST.ICONWIDTH:
-			return w
-		else:
-			return CONST.ICONWIDTH
-	
 class EvaluateNode(Node):
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"multi")
+		Node.__init__(self,PU,"branch")
 		self.condition = operand
 		self.whenList = []
 		
@@ -119,13 +112,6 @@ class WhenBranch(Branch):
 			
 		return "WHEN " + condition.upper()
 		
-	def width(self):
-		w = Branch.width(self)
-		if w > CONST.ICONWIDTH:
-			return w
-		else:
-			return CONST.ICONWIDTH
-	
 class LoopBranch(Branch):
 	def __init__(self,PU,operand):
 		Branch.__init__(self,PU,"info")
@@ -155,7 +141,7 @@ class ParaNode(Node):
 		return True
 		
 	def description(self):
-		return "PARA " + self.paraName.upper()
+		return self.paraName.upper() + "."
 		
 class CallNode(Node):
 	def __init__(self,PU,operand):

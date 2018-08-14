@@ -4,10 +4,12 @@ generating tree
 - aib018y	- infinite loop
 			- another program starts at the bottom, how is this handled?
 - add details for exec blocks
-
+- file access!
 
 generating flowchart
-- "C:\Program Files\Notepad++\notepad++.exe" "d:\Profiles\vbindal\Desktop\2389 email jcl.txt" -n65
 - loopbreakpointer, goto, loop
-
+- scroll
+- zoom
+- coloured icons
+- go to : jump to para instead of line joining the two as itll be messy
 
