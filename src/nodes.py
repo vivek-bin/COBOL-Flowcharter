@@ -57,7 +57,7 @@ class IfNode(Node):
 		self.branch[False] = IfBranch(PU,False)
 		
 	def isEmpty(self):
-		return self.branch[True].isEmpty() or self.branch[False].isEmpty()	
+		return self.branch[True].isEmpty() and self.branch[False].isEmpty()	
 		
 	def width(self):
 		return self.branch[True].width() + self.branch[False].width()
@@ -114,7 +114,7 @@ class WhenBranch(Branch):
 		
 class LoopBranch(Branch):
 	def __init__(self,PU,operand):
-		Branch.__init__(self,PU,"info")
+		Branch.__init__(self,PU,"branch")
 		self.condition = operand
 		
 	def description(self):
@@ -182,6 +182,18 @@ class ExecNode(Node):
 			l += "QUERY: " + self.query.upper() + "\n"
 		l = l[:-1]
 		return l
+	
+class FileNode(Node):
+	def __init__(self,PU,statement,file):
+		Node.__init__(self,PU,"file")
+		self.statement = statement
+		self.file = file
+	
+	def iconText(self):
+		return self.file.upper()
+		
+	def description(self):
+		return self.statement.upper() + " " + self.file.upper()
 	
 class EndNode(Node):
 	def __init__(self,PU,operand=0):

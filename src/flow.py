@@ -5,6 +5,7 @@ import Tkinter
 import nodes
 import createTree
 import fileaccess
+import textwrap
 from PIL import ImageTk
 
 class ChartWindow(Tkinter.Frame):
@@ -18,27 +19,36 @@ class ChartWindow(Tkinter.Frame):
 		self.toolTip = []
 	
 	def initUI(self):
+		self.scrollbarV = Tkinter.Scrollbar(self,orient=Tkinter.VERTICAL)
+		self.scrollbarV.pack(side=Tkinter.RIGHT, fill=Tkinter.Y)
+		self.scrollbarH = Tkinter.Scrollbar(self,orient=Tkinter.HORIZONTAL)
+		self.scrollbarH.pack(side=Tkinter.BOTTOM, fill=Tkinter.X)
+		
 		self.parent.title(self.component.upper())
 		self.config(bg = '#F0F0F0')
 		self.pack(fill = Tkinter.BOTH, expand = 1)
 		#create canvas
-		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 800)#,scrollregion=(0,0,1500,15000))
-		self.canvas.pack(side = Tkinter.TOP, anchor = Tkinter.NW, padx = 10, pady = 10)
+		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 600)#,scrollregion=(0,0,1500,15000))
+		self.canvas.pack(side = Tkinter.LEFT, anchor = Tkinter.NW, fill=Tkinter.BOTH, padx = 10, pady = 10)
 		self.canvas.tag_bind("ButtonIcon", "<ButtonPress-1>", self.setPressedIcon)
 		self.canvas.tag_bind("ButtonIcon", "<ButtonRelease-1>", self.resetPressedIcon)
 		self.canvas.tag_bind("JumpToLine", "<ButtonRelease-1>", self.openExpandedCode)
 		self.canvas.tag_bind("HasDetails", "<Enter>", self.showToolTip)
 		self.canvas.tag_bind("HasDetails", "<Leave>", self.hideToolTip)
-		scrollbar = Tkinter.Scrollbar(self,orient=Tkinter.VERTICAL)
-		scrollbar.pack(side=Tkinter.RIGHT, fill=Tkinter.Y)
-		scrollbar.config(command=self.canvas.yview)
-		scrollbar = Tkinter.Scrollbar(self,orient=Tkinter.HORIZONTAL)
-		scrollbar.pack(side=Tkinter.BOTTOM, fill=Tkinter.X)
-		scrollbar.config(command=self.canvas.xview)
+		
+		self.scrollbarV.config(command=self.canvas.yview)
+		self.scrollbarH.config(command=self.canvas.xview)
+		
+		self.canvas.bind_all("<MouseWheel>", self.mouseWheelScroll)
+		
+	def mouseWheelScroll(self, event):
+		self.canvas.yview_scroll(-1*(event.delta/120), "units")
+		
+		
 		
 	def loadIcons(self):
 		self.icons = {}
-		for iType in ["branch","db","info","module","process","start"]:
+		for iType in ["branch","db","file","info","module","process","start"]:
 			for state in ["idle","hover","click"]:
 				self.icons[iType+"-"+state] = ImageTk.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
 				
@@ -106,7 +116,6 @@ class ChartWindow(Tkinter.Frame):
 	def showToolTip(self,event):
 		canvas = event.widget
 		objId = canvas.find_withtag("current")[0]
-		
 		if objId in self.toolTip:
 			return
 		
@@ -118,10 +127,13 @@ class ChartWindow(Tkinter.Frame):
 		
 		node = self.nodeDict[objId]
 		text = node.description()		
-		
-		textLabel = self.canvas.create_text(x,y,text=text,anchor="nw",font=CONST.FONT,fill="#000000",tags="ToolTip",state=Tkinter.DISABLED)
-		textBg = self.canvas.create_rectangle(self.canvas.bbox(textLabel),fill="white",tags="ToolTip",state=Tkinter.DISABLED)
-		self.canvas.tag_lower(textBg,textLabel)
+		if text:
+			lines = text.split("\n")
+			lines = [textwrap.fill(line,CONST.TOOLTIPSIZE) for line in lines]
+			text = "\n".join(lines)
+			textLabel = self.canvas.create_text(x,y,text=text,anchor="nw",font=CONST.FONT,fill="#000000",tags="ToolTip",state=Tkinter.DISABLED)
+			textBg = self.canvas.create_rectangle(self.canvas.bbox(textLabel),fill="white",tags="ToolTip",state=Tkinter.DISABLED)
+			self.canvas.tag_lower(textBg,textLabel)
 		
 	def hideToolTip(self,event):
 		canvas = event.widget
@@ -136,6 +148,8 @@ class ChartWindow(Tkinter.Frame):
 def createFlowChart(chartWindow,nodeList,curX,curY):
 	for node in nodeList:
 		if node.__class__ is nodes.ParaNode:
+			pass#continue
+		if node.isEmpty():
 			pass#continue
 		
 		if node.__class__ is nodes.NonLoopBranch:
@@ -178,6 +192,9 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 			elif curYF < curYT:
 				linePoints = (curXF,curYT,curXF,curYF)
 				chartWindow.joiningLine(linePoints)
+				linePoints = (curXF,curYT,curXT,curYT)
+				chartWindow.joiningLine(linePoints)
+			else:
 				linePoints = (curXF,curYT,curXT,curYT)
 				chartWindow.joiningLine(linePoints)
 			
@@ -268,7 +285,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 def main(component="VIID246"):
 	nodes = createTree.getChart(component)
 	root = Tkinter.Tk()
-	root.geometry('500x900+10+50')
+	root.geometry('500x600+10+50')
 	app = ChartWindow(root,component)
 	createFlowChart(app,nodes,200,20)
 	app.mainloop()
@@ -276,5 +293,5 @@ def main(component="VIID246"):
 	
 	return nodes
 
-n=main()
+#n=main()
 n=main("VIBRE016")

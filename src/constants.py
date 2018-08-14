@@ -25,6 +25,7 @@ ZEROPAD = 8
 FONT = ("Courier New",12,"bold")
 NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
+TOOLTIPSIZE = 30
 
 BRANCHSPACE = 10
 BLOCKSPACE = 10

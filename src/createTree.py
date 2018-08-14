@@ -117,6 +117,9 @@ def createChart(PU,ignorePeriod=False):
 		#point node
 		if "para" in lineDict:
 			programObj.append(nodes.ParaNode(PU,lineDict["para"]))
+		if "file" in lineDict:
+			statement = lineDict["file"]
+			programObj.append(nodes.FileNode(PU,statement,lineDict[statement]))
 		if "call" in lineDict:
 			calledProgram = getFieldValue(PU,lineDict["call"])
 			if calledProgram == "'dfhei1'":
@@ -347,6 +350,14 @@ def digestSentence(inputLine):
 		toPos = words.index("to")
 		lineDict["move"] = words[toPos-1]
 		lineDict["to"] = words[toPos+1:]
+		
+	if lineDict[0] in ["open","read","write","close","rewrite","delete","start"]:
+		lineDict["file"] = lineDict[0]
+		lineDict[lineDict[0]] = words[1]
+		if words[0] == "open":
+			lineDict[lineDict[0]] = words[2]
+		if words[0] == "read" and words[1] == "next":
+			lineDict[lineDict[0]] = words[2]
 	
 	if words[0] == "go" and words[1] == "to":
 		lineDict["go to"] = words[2]

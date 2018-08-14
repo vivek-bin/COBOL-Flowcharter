@@ -1,15 +1,17 @@
 generating tree
-- skip empty branches
 - handle/test go to's
 - aib018y	- infinite loop
 			- another program starts at the bottom, how is this handled?
-- add details for exec blocks
-- file access!
+
 
 generating flowchart
 - loopbreakpointer, goto, loop
-- scroll
+			- scroll
 - zoom
+- positioning of chart
 - coloured icons
 - go to : jump to para instead of line joining the two as itll be messy
+- proper spacing of branches
+- proper spacing of blocks
+- proper terminating(GOBACK, GO TO) and joining(end of IF) of branches
 
