@@ -77,6 +77,8 @@ def processingFile(inputFile):
 			continue
 		if inputLine.replace(".","").strip() == "eject":
 			continue
+		if " title " in inputLine:
+			continue
 			
 		inputLine = inputLine[7:]
 
@@ -133,7 +135,7 @@ def processingFileClean(inputFile):
 
 	line = ""
 	execFlag = False
-	for inputLine in inputProcedureDivision:
+	for i,inputLine in enumerate(inputProcedureDivision):
 		lineNo = inputLine[:CONST.ZEROPAD]
 		inputLine = inputLine[CONST.ZEROPAD:]
 		
@@ -145,6 +147,13 @@ def processingFileClean(inputFile):
 				line = ""
 			file.append(lineNo + inputLine)
 			continue
+		
+		if inputWords[0] in ["id","identification"] and inputWords[1] == "division":
+			if line:
+				file.append(line)
+				line = ""
+			file.extend(processingFileClean(inputProcedureDivision[i:]))
+			break
 		
 		if inputWords[0] == "procedure" and inputWords[1] == "division":
 			if line:
@@ -163,7 +172,10 @@ def processingFileClean(inputFile):
 			if line:
 				file.append(line)
 				line = ""
-			file.append(lineNo + inputWords[0]+".")
+			if inputWords[0] == "end" and inputWords[1] == "program":
+				file.append(lineNo + inputLine)
+			else:
+				file.append(lineNo + inputWords[0]+".")
 			continue			
 		
 		if inputWords[0] == "exec":
@@ -302,5 +314,4 @@ def writeAllProcessingExpand(start=0,end=999999):
 	
 def t1(start=0,end=9999999):
 	writeAllProcessingExpand(start,end)
-	
 	

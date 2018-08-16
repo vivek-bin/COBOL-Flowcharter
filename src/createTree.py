@@ -4,6 +4,9 @@ import processingfileclass as pfc
 import nodes
 import time
 import fileaccess
+import sys
+
+depthcount = 0
 
 class ProcessingUnit:
 	def __init__(self,inputArg=False):
@@ -15,6 +18,7 @@ class ProcessingUnit:
 		self.inputFile = []
 		self.paraCall = False
 		self.paraReturn = False
+		self.currentPara = ""
 
 		if inputArg.__class__ is ProcessingUnit:
 			self.performReturnStack = inputArg.performReturnStack[:]
@@ -62,7 +66,8 @@ class ProcessingUnit:
 	
 	def pushStack(self,performStart,performEnd):
 		#time.sleep(0.5)
-		currentPara = self.inputFile.getCurrentPara(self.processedLines[-1])
+		#fileaccess.writeLOG(";".join(self.paraStack))
+		currentPara = self.currentPara
 		self.paraStack.append(currentPara)
 		self.performReturnStack.append(self.processedLines[-1])
 		self.performEndStack.append(performEnd)
@@ -77,13 +82,15 @@ class ProcessingUnit:
 def createChart(PU,ignorePeriod=False):
 	programObj = []
 	tempObj = False
-	
+	global depthcount
 	lineCount = 0
+	depthcount += 1
+	fileaccess.writeLOG(str(depthcount))
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-		#fileaccess.writeLOG(str(PU.processedLines[-1]) + "   " + str(inputLine))
+		
 		if PU.paraReturn:
 			break
 		
@@ -116,6 +123,7 @@ def createChart(PU,ignorePeriod=False):
 		
 		#point node
 		if "para" in lineDict:
+			PU.currentPara = lineDict["para"]
 			programObj.append(nodes.ParaNode(PU,lineDict["para"]))
 		if "file" in lineDict:
 			statement = lineDict["file"]
@@ -139,10 +147,12 @@ def createChart(PU,ignorePeriod=False):
 		if "go to" in lineDict:
 			tempObj = nodes.GoToBranch(PU,lineDict["go to"])
 			
-			goToPU = ProcessingUnit(PU)
-			goToPU.jumpToPara(lineDict["go to"])
-			subChart = createChart(goToPU,True)
-			tempObj.branch = subChart
+			
+			if lineDict["go to"] not in (PU.paraStack + PU.performEndStack + [PU.currentPara]):
+				goToPU = ProcessingUnit(PU)
+				goToPU.jumpToPara(lineDict["go to"])
+				subChart = createChart(goToPU,True)
+				tempObj.branch = subChart
 			programObj.append(tempObj)
 			tempObj = False
 			
@@ -288,6 +298,7 @@ def createChart(PU,ignorePeriod=False):
 	#if emptyFlag:
 	#	programObj = []
 	
+	depthcount -= 1
 	return programObj
 	
 def getFieldValue(PU,field):
@@ -480,8 +491,9 @@ def generateChart(file):
 	
 	processingFile = pfc.ProgramProcessingFile(file)
 	PU = ProcessingUnit(processingFile)
-	
+	sys.setrecursionlimit(4000)
 	fChart = createChart(PU,True)
+	sys.setrecursionlimit(1000)
 	
 	return PU, fChart
 	
@@ -499,6 +511,31 @@ def getChart(component):
 	fileaccess.closeLib(fileaccess.PROCESSING)
 	
 	return fChart
+		
+def getPU(component):
+	fileaccess.openLib(fileaccess.PROCESSING)
+	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
+	fileaccess.writeDATA("log")
+	file = fileaccess.loadFile(fileaccess.PROCESSING,component)
+	#file = fileaccess.loadDATA("test")
 	
-
+	fChart = []
 	
+	processingFile = pfc.ProgramProcessingFile(file)
+	PU = ProcessingUnit(processingFile)
+	
+	#fChart = createChart(PU,True)
+	#fileaccess.writePickle(component,fChart)
+	#f2 = fileaccess.loadPickle(component)
+	
+	fileaccess.closeLib(fileaccess.PROCESSING)
+	
+	return PU
+	
+def t1():
+	return getChart("vib3248")
+	
+def t2():
+	return getPU("aib018y")
+	
+n=t1()

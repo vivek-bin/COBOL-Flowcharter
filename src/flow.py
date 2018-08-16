@@ -146,24 +146,31 @@ class ChartWindow(Tkinter.Frame):
 	
 	
 def createFlowChart(chartWindow,nodeList,curX,curY):
+	#firstNodeFlag = True
 	for node in nodeList:
 		if node.__class__ is nodes.ParaNode:
 			pass#continue
 		if node.isEmpty():
-			pass#continue
+			continue
 		
 		if node.__class__ is nodes.NonLoopBranch:
 			curX, curY = createFlowChart(chartWindow,node.branch,curX,curY)
 		else:
+			#if not firstNodeFlag:
 			prevX, prevY = curX, curY
-			curY += CONST.BLOCKHEIGHT
+			curY += CONST.BLOCKHEIGHT/2
 			linePoints = (prevX,prevY,curX,curY)
 			chartWindow.joiningLine(linePoints)
 			chartWindow.newBlock(node,curX,curY)
+			#firstNodeFlag = False
 		
 		if node.__class__ is nodes.LoopBranch:
+			prevX, prevY = curX, curY
+			curY += CONST.BLOCKHEIGHT/2
+			linePoints = (prevX,prevY,curX,curY)
+			chartWindow.joiningLine(linePoints)
 			retX, retY = createFlowChart(chartWindow,node.branch,curX,curY)
-			linePoints = (curX,curY,retX,retY)
+			linePoints = (curX,curY - CONST.BLOCKHEIGHT/2,retX,retY)
 			chartWindow.joiningLine(linePoints,"-C")
 			
 			curY = retY
@@ -171,7 +178,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 		
 		if node.__class__ is nodes.IfNode:
 			prevX, prevY = curX, curY
-			curY += CONST.BLOCKHEIGHT
+			curY += CONST.BLOCKHEIGHT/2
 			
 			curXT = curX - node.branch[True].width()/2
 			linePoints = (prevX,prevY,curXT,curY)
@@ -185,20 +192,17 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 			curXF, curYF = createFlowChart(chartWindow,node.branch[False].branch,curXF,curY)
 			
 			if curYT < curYF:
-				linePoints = (curXT,curYT,curXT,curYF)
-				chartWindow.joiningLine(linePoints)
-				linePoints = (curXF,curYF,curXT,curYF)
-				chartWindow.joiningLine(linePoints)
-			elif curYF < curYT:
-				linePoints = (curXF,curYT,curXF,curYF)
-				chartWindow.joiningLine(linePoints)
-				linePoints = (curXF,curYT,curXT,curYT)
-				chartWindow.joiningLine(linePoints)
+				extX, extY = curXT, curYF
 			else:
-				linePoints = (curXF,curYT,curXT,curYT)
-				chartWindow.joiningLine(linePoints)
+				extX, extY = curXF, curYT
 			
-			curY = curYT
+			if curYT != curYF:
+				linePoints = (extX,curYT,extX,curYF)
+				chartWindow.joiningLine(linePoints)
+			linePoints = (curXF,extY,curXT,extY)
+			chartWindow.joiningLine(linePoints)
+			curY = extY
+			
 			
 		
 		if node.__class__ is nodes.EvaluateNode:
@@ -256,14 +260,9 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 				branchEndPoints.append(endPoints)
 			
 			
-			minX =  99999999
-			maxX = maxY = -1
-			for point in branchEndPoints:
-				if point[0] < minX:
-					minX = point[0]
-			for point in branchEndPoints:
-				if point[0] > maxX:
-					maxX = point[0]
+			minX = branchStartX[0]
+			maxX = branchStartX[-1]
+			maxY = -1
 			for point in branchEndPoints:
 				if point[1] > maxY:
 					maxY = point[1]
@@ -276,6 +275,12 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 			chartWindow.joiningLine(linePoints)
 			
 			curY = maxY
+		
+		if node.__class__ is not nodes.EndNode:
+			prevX, prevY = curX, curY
+			curY += CONST.BLOCKHEIGHT/2
+			linePoints = (prevX,prevY,curX,curY)
+			chartWindow.joiningLine(linePoints)
 				
 	
 	return curX, curY
@@ -287,7 +292,7 @@ def main(component="VIID246"):
 	root = Tkinter.Tk()
 	root.geometry('500x600+10+50')
 	app = ChartWindow(root,component)
-	createFlowChart(app,nodes,200,20)
+	createFlowChart(app,nodes[:14],200,20)
 	app.mainloop()
 	#root.destroy()
 	

@@ -1,9 +1,9 @@
 import constants as CONST
 
 class ProgramProcessingFile:
-	def searchFile(self,search):
-		i = 0
-		for inputLine in self.inputFile:
+	def searchFile(self,search,fromPos=0):
+		i = fromPos
+		for inputLine in self.inputFile[fromPos:]:
 			if search in inputLine:
 				return i
 			i += 1
@@ -28,8 +28,9 @@ class ProgramProcessingFile:
 		i = self.searchFile("environment division")
 		if i == -1:
 			self.environmentDivision = []
-		j = self.searchFile("data division")
-		self.environmentDivision = self.inputFile[i+1:j]
+		else:
+			j = self.searchFile("data division")
+			self.environmentDivision = self.inputFile[i+1:j]
 		
 	def setDataDivision(self):
 		i = self.searchFile("data division")
@@ -38,8 +39,39 @@ class ProgramProcessingFile:
 		
 	def setProcedureDivision(self):
 		i = self.searchFile("procedure division")
-		self.procedureDivision = self.inputFile[i+1:]
-		self.procedureDivisionLineNo = self.inputFileLineNo[i+1:]
+		j = self.searchFile("id division",i)
+		if j == -1:
+			j = self.searchFile("identification division",i)
+		
+		if j == -1:		
+			self.procedureDivision = self.inputFile[i+1:]
+			self.procedureDivisionLineNo = self.inputFileLineNo[i+1:]
+		else:
+			self.procedureDivision = self.inputFile[i+1:j]
+			self.procedureDivisionLineNo = self.inputFileLineNo[i+1:j]
+			
+			eraseLines = []
+			lineNo = j
+			while lineNo < len(self.inputFile):
+				subProg = []
+				while lineNo < len(self.inputFile):
+					eraseLines.append(lineNo)
+					subProg.append(self.inputFileLineNo[lineNo] + self.inputFile[lineNo])
+					lineNo += 1
+					if self.inputFile[lineNo-1].startswith("end program"):
+						break
+				self.subProgram.append(ProgramProcessingFile(subProg))
+				
+				while lineNo < len(self.inputFile):
+					if self.inputFile[lineNo].startswith("id division") or self.inputFile[lineNo].startswith("identification division"):
+						break
+					self.procedureDivision.append(self.inputFile[lineNo])
+					self.procedureDivisionLineNo.append(self.inputFileLineNo[lineNo])
+					lineNo += 1
+					
+			for lineNo in eraseLines[::-1]:
+				del self.inputFile[lineNo]
+				del self.inputFileLineNo[lineNo]
 	
 	def setDivisions(self):
 		self.setIdentificationDivision()
@@ -81,6 +113,7 @@ class ProgramProcessingFile:
 		self.procedureDivisionLineNo = []
 		self.paraStart = {}
 		self.paraEnd = {}
+		self.subProgram = []
 		
 		if inputFile:
 			self.inputFile = inputFile 

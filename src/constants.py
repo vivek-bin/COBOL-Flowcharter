@@ -22,7 +22,7 @@ DATA = PROJECT + "DATA\\"
 
 ZEROPAD = 8
 
-FONT = ("Courier New",12,"bold")
+FONT = ("Times New Roman",10,"bold")
 NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
 TOOLTIPSIZE = 30

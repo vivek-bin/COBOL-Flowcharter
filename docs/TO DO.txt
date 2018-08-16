@@ -4,6 +4,7 @@ generating tree
 			- another program starts at the bottom, how is this handled?
 
 
+			
 generating flowchart
 - loopbreakpointer, goto, loop
 			- scroll
@@ -14,4 +15,6 @@ generating flowchart
 - proper spacing of branches
 - proper spacing of blocks
 - proper terminating(GOBACK, GO TO) and joining(end of IF) of branches
+
+
 
