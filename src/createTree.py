@@ -27,6 +27,7 @@ class ProcessingUnit:
 			self.processedLines = inputArg.processedLines[:]
 			self.programCounter = inputArg.programCounter - 0
 			self.inputFile = inputArg.inputFile
+			self.currentPara = inputArg.currentPara
 		
 		if inputArg.__class__ is pfc.ProgramProcessingFile:
 			self.inputFile = inputArg
@@ -36,7 +37,8 @@ class ProcessingUnit:
 		return self.inputFile.procedureDivision[lineNo]
 	
 	def peekCurrentStatement(self):
-		return self.inputFile.procedureDivision[self.processedLines[-1]]
+		currentLine = self.processedLines[-1]
+		return self.inputFile.procedureDivision[currentLine]
 	
 	def peekNextStatement(self):
 		return self.inputFile.procedureDivision[self.programCounter]
@@ -85,12 +87,15 @@ def createChart(PU,ignorePeriod=False):
 	global depthcount
 	lineCount = 0
 	depthcount += 1
-	fileaccess.writeLOG(str(depthcount))
+	try:
+		fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	except IndexError:
+		fileaccess.writeLOG("start:index error")
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-		
+		fileaccess.writeLOG(str(PU.processedLines[-1]) + "    " + str(inputLine))
 		if PU.paraReturn:
 			break
 		
@@ -100,6 +105,7 @@ def createChart(PU,ignorePeriod=False):
 		#exec nodes
 		if "exec" in lineDict:
 			execBlock = [inputLine]
+			tempPU = ProcessingUnit(PU)
 			while "end-exec" not in inputLine:
 				inputLine = PU.getNextStatement()
 				execBlock.append(inputLine)
@@ -111,7 +117,7 @@ def createChart(PU,ignorePeriod=False):
 				lineDict["goback"] = execDict["goback"]
 				
 			if execDict["type"] == "sql":
-				tempObj2 = nodes.ExecNode(PU,execDict["type"])
+				tempObj2 = nodes.ExecNode(tempPU,execDict["type"])
 				if "cursor" in execDict:
 					tempObj2.cursor = execDict["cursor"]
 				if "table" in execDict:
@@ -146,8 +152,6 @@ def createChart(PU,ignorePeriod=False):
 			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
 		if "go to" in lineDict:
 			tempObj = nodes.GoToBranch(PU,lineDict["go to"])
-			
-			
 			if lineDict["go to"] not in (PU.paraStack + PU.performEndStack + [PU.currentPara]):
 				goToPU = ProcessingUnit(PU)
 				goToPU.jumpToPara(lineDict["go to"])
@@ -235,7 +239,8 @@ def createChart(PU,ignorePeriod=False):
 			lineDict = digestSentence(inputLine)
 			
 			while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriod):
-				createChart(PU,ignorePeriod)
+				createChart(PU)
+				#createChart(PU,ignorePeriod)
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
 				
@@ -266,7 +271,8 @@ def createChart(PU,ignorePeriod=False):
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
 				while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriod):
-					createChart(PU,ignorePeriod)
+					createChart(PU)
+					#createChart(PU,ignorePeriod)
 					inputLine = PU.peekCurrentStatement()
 					lineDict = digestSentence(inputLine)
 			
@@ -299,6 +305,12 @@ def createChart(PU,ignorePeriod=False):
 	#	programObj = []
 	
 	depthcount -= 1
+	try:
+		fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	except IndexError:
+		fileaccess.writeLOG("end:index error")
+	
+	
 	return programObj
 	
 def getFieldValue(PU,field):
@@ -538,4 +550,4 @@ def t1():
 def t2():
 	return getPU("aib018y")
 	
-n=t1()
+#n=t1()
