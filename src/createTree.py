@@ -48,12 +48,11 @@ class ProcessingUnit:
 		
 		if self.processedLines and not self.paraCall:
 			if self.processedLines[-1] in self.inputFile.paraEnd.keys():
-				if self.inputFile.paraEnd[self.processedLines[-1]] in self.performEndStack:
-					stackIndex = self.performEndStack.index(self.inputFile.paraEnd[self.processedLines[-1]])
-					stackDepth = len(self.performEndStack) - stackIndex
-
-					for i in range(stackDepth):
-						self.performEndStack.pop()
+				paraName = self.inputFile.paraEnd[self.processedLines[-1]]
+				if paraName in self.performEndStack:
+					poppedPara = False
+					while poppedPara != paraName:
+						poppedPara = self.performEndStack.pop()
 						self.paraStack.pop()
 						self.programCounter = self.performReturnStack.pop()
 					self.paraReturn = True
@@ -87,20 +86,17 @@ def createChart(PU,ignorePeriod=False):
 	global depthcount
 	lineCount = 0
 	depthcount += 1
-	try:
-		fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	except IndexError:
-		fileaccess.writeLOG("start:index error")
+	#try:
+	#	fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	#except IndexError:
+	#	fileaccess.writeLOG("start:index error")
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-		fileaccess.writeLOG(str(PU.processedLines[-1]) + "    " + str(inputLine))
+	#	fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
 		if PU.paraReturn:
-			break
-		
-		lineCount += 1
-		
+			break		
 		
 		#exec nodes
 		if "exec" in lineDict:
@@ -181,7 +177,7 @@ def createChart(PU,ignorePeriod=False):
 				if "thru" in lineDict:
 					performEnd = lineDict["thru"]
 				
-				if performStart in PU.paraStack:
+				if performStart in PU.paraStack or performStart == PU.currentPara:
 					paraAlreadyInPath = True
 					tempObj = nodes.LoopBreakPointer(PU,performStart)
 					programObj.append(tempObj)
@@ -240,7 +236,6 @@ def createChart(PU,ignorePeriod=False):
 			
 			while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriod):
 				createChart(PU)
-				#createChart(PU,ignorePeriod)
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
 				
@@ -272,7 +267,6 @@ def createChart(PU,ignorePeriod=False):
 				lineDict = digestSentence(inputLine)
 				while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriod):
 					createChart(PU)
-					#createChart(PU,ignorePeriod)
 					inputLine = PU.peekCurrentStatement()
 					lineDict = digestSentence(inputLine)
 			
@@ -305,10 +299,10 @@ def createChart(PU,ignorePeriod=False):
 	#	programObj = []
 	
 	depthcount -= 1
-	try:
-		fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	except IndexError:
-		fileaccess.writeLOG("end:index error")
+	#try:
+	#	fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	#except IndexError:
+	#	fileaccess.writeLOG("end:index error")
 	
 	
 	return programObj
@@ -322,7 +316,8 @@ def getFieldValue(PU,field):
 		if i>500:
 			break
 		processedLine = PU.peekStatement(lineNo)
-		if not processedLine.startswith("move "):
+		
+		if not processedLine.strip().startswith("move "):
 			continue
 		processedDict = digestSentence(processedLine)
 		if "move" in processedDict:
@@ -352,14 +347,33 @@ def getFieldValue(PU,field):
 	
 def digestSentence(inputLine):
 	lineDict = {}
+	#dont split quoted text into strings
+	if "'" in inputLine or '"' in inputLine:
+		singleQuotePos = inputLine.find("'")
+		doubleQuotePos = inputLine.find('"')
+		if singleQuotePos == -1:
+			quoteType = '"'
+		elif doubleQuotePos == -1:
+			quoteType = "'"
+		elif doubleQuotePos > singleQuotePos:
+			quoteType = "'"
+		else:
+			quoteType = '"'
+		
+		quotePos = [i for i,c in enumerate(inputLine) if c in ['"',"'"]]
+		quoteType = inputLine[quotePos[0]]
+		quotePos = [i for i,c in enumerate(inputLine) if c == quoteType]
+		while quotePos:
+			for i in range(quotePos[0],quotePos[1]):
+				if inputLine[i] == " ":
+					inputLine = inputLine[:i] + chr(0) + inputLine[i+1:]
+			quotePos.pop()
+			quotePos.pop()
+		
 	words = inputLine.replace("."," .").split()
+	inputLine = inputLine.replace(chr(0)," ")
+	words = [word.replace(chr(0)," ") for word in words]
 	
-	#keyList = []
-	#keyList.extend(["para","if","else","end-if",".","evaluate","when","end-evaluate","call","go to"])
-	#keyList.extend(["perform","thru","until","end-perform","exec","end-exec","goback","return statement"])
-	#keyList.extend(["using","move","to"])
-	#for word in keyList:
-	#	lineDict[word] = False
 	
 	lineDict[0] = words[0]
 	lineDict[words[0]] = True
