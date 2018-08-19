@@ -301,4 +301,4 @@ def main(component="VIID246"):
 #n=main()
 #n=main("VIBRE016")
 #n=main("VIB3N99")
-n=main("VIB3248")
+n=main("aib018y")

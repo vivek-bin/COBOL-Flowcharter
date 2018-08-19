@@ -86,15 +86,15 @@ def createChart(PU,ignorePeriod=False):
 	global depthcount
 	lineCount = 0
 	depthcount += 1
-	#try:
-	#	fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	#except IndexError:
-	#	fileaccess.writeLOG("start:index error")
+	try:
+		fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	except IndexError:
+		fileaccess.writeLOG("start:index error")
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-	#	fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
+		fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
 		if PU.paraReturn:
 			break		
 		
@@ -286,7 +286,16 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = False
 				if "." in lineDict and not ignorePeriod:
 					break
-		
+					
+		if "search" in lineDict:
+			createChart(PU)
+			inputLine = PU.peekCurrentStatement()
+			lineDict = digestSentence(inputLine)
+			if "when" in lineDict:
+				createChart(PU)
+				inputLine = PU.peekCurrentStatement()
+				lineDict = digestSentence(inputLine)
+				
 	
 	if tempObj:
 		programObj.append(tempObj)
@@ -299,10 +308,10 @@ def createChart(PU,ignorePeriod=False):
 	#	programObj = []
 	
 	depthcount -= 1
-	#try:
-	#	fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	#except IndexError:
-	#	fileaccess.writeLOG("end:index error")
+	try:
+		fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	except IndexError:
+		fileaccess.writeLOG("end:index error")
 	
 	
 	return programObj
@@ -456,7 +465,7 @@ def digestSentence(inputLine):
 		lineDict["goback"] = True
 	
 	
-	for word in ["end-if","end-evaluate","end-perform","when","else","go to","goback","."]:
+	for word in ["end-if","end-evaluate","end-perform","end-search","else","when","go to","goback","."]:
 		if word in lineDict:
 			lineDict["return statement"] = word
 			break

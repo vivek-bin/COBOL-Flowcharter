@@ -73,6 +73,11 @@ def processingFile(inputFile):
 		inputLine = inputLine.lower().rstrip()
 		if len(inputLine) < 8:
 			continue
+		if inputLine[6] == "-":
+			for i in range(7,len(inputLine)):
+				if inputLine[i] != " ":
+					break
+			inputLine = inputLine[:6] + " " + inputLine[7:i]+inputLine[i+1:]
 		if inputLine[6] != " ":
 			continue
 		if inputLine.replace(".","").strip() == "eject":
@@ -293,14 +298,11 @@ def writeAllProcessingExpand(start=0,end=999999):
 	fileaccess.openLib(fileaccess.EXPANDED,"w")
 	fileaccess.openLib(fileaccess.PROCESSING,"w")
 	
-	
 	list = fileaccess.fileListLib(fileaccess.SRCE)
 	processingList = list[start:end]
 	
 	for fileName in processingList:
-		#print (fileName)
 		writeProcessingExpand(fileName)
-		
 		
 	fileaccess.closeLib(fileaccess.SRCE)
 	fileaccess.closeLib(fileaccess.COPY)
@@ -312,6 +314,6 @@ def writeAllProcessingExpand(start=0,end=999999):
 	print (time.time() - startTime)
 	
 	
-def t1(start=0,end=9999999):
+def t1(start=215,end=230):
 	writeAllProcessingExpand(start,end)
 	
