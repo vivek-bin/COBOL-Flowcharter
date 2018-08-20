@@ -23,14 +23,15 @@ DATA = PROJECT + "DATA\\"
 
 ZEROPAD = 8
 
-FONT = ("Times New Roman",10,"bold")
-TOOLTIPFONT = ("Times New Roman",8,"normal")
+FONT = ("League Gothic",3,"bold")
+TOOLTIPFONT = ("Times New Roman",7,"normal")
 NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
-TOOLTIPSIZE = 30
+TOOLTIPSIZE = 50
 
-BRANCHSPACE = 10
-BLOCKSPACE = 0
+ZOOM = 0.3
+BRANCHSPACE = 10*ZOOM
+BLOCKSPACE = 0*ZOOM
 
 ICONS = PROJECT + "icons\\"
 

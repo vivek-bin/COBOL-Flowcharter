@@ -81,15 +81,15 @@ def createChart(PU,ignorePeriod=False):
 	global depthcount
 	lineCount = 0
 	depthcount += 1
-	#try:
-	#	fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	#except IndexError:
-	#	fileaccess.writeLOG("start:index error")
+	try:
+		fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	except IndexError:
+		fileaccess.writeLOG("start:index error")
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-	#	fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
+		fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
 		if PU.paraReturn:
 			break		
 		
@@ -106,6 +106,7 @@ def createChart(PU,ignorePeriod=False):
 				lineDict["call"] = execDict["call"]
 			if "goback" in execDict:
 				lineDict["goback"] = execDict["goback"]
+				lineDict["return statement"] = "goback"
 				
 			if execDict["type"] == "sql":
 				tempObj2 = nodes.ExecNode(tempPU,execDict["type"])
@@ -300,10 +301,10 @@ def createChart(PU,ignorePeriod=False):
 	#	programObj = []
 	
 	depthcount -= 1
-	#try:
-	#	fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	#except IndexError:
-	#	fileaccess.writeLOG("end:index error")
+	try:
+		fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	except IndexError:
+		fileaccess.writeLOG("end:index error")
 	
 	
 	return programObj

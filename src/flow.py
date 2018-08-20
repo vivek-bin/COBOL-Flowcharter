@@ -8,7 +8,8 @@ import fileaccess
 import textwrap
 import sys
 import inspect
-from PIL import ImageTk
+import time
+from PIL import Image,ImageTk
 
 class ChartWindow(Tkinter.Frame):
 	def __init__(self, parent,component):
@@ -51,7 +52,11 @@ class ChartWindow(Tkinter.Frame):
 		self.icons = {}
 		for iType in ["branch","db","file","info","module","process","start"]:
 			for state in ["idle","hover","click"]:
-				self.icons[iType+"-"+state] = ImageTk.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
+				imgName = iType + "-" + state
+				img = Image.open(CONST.ICONS + imgName +".png")
+				imgResize = (int(i*CONST.ZOOM) for i in img.size)
+				img = img.resize(imgResize, Image.ANTIALIAS)
+				self.icons[imgName] = ImageTk.PhotoImage(img)
 		
 		allNodeClasses = inspect.getmembers(nodes, inspect.isclass)
 		for nodeClass in allNodeClasses:
@@ -332,14 +337,15 @@ def createWindow(component="VIID246"):
 	
 	app = ChartWindow(root,component)
 	nodes = createTree.getChart(component)
+	startTime = time.time()
 	createFlowChart(app,nodes,200,20)
-	
+	print time.time() - startTime
 	root.mainloop()
 	
 	return nodes
 	
 #n=createWindow()
 #n=createWindow("VIBRE016")
-#n=createWindow("VIC3008")
-n=createWindow("vib3248")
+n=createWindow("vcc1060")
+#n=createWindow("vib3248")
 #n=createWindow("vib3365")
