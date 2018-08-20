@@ -1,19 +1,30 @@
-import Tkinter
 import constants as CONST
 
 class Node:
-	def __init__(self,PU,iconName=False):
+	iconWidth = 0
+	iconHeight = 0
+	iconName = False
+	def __init__(self,PU):
 		self.paraStack = PU.paraStack[:]
 		self.lineNo = int(PU.inputFile.procedureDivisionLineNo[PU.processedLines[-1]]) + 1
-		
-		self.idleIcon = self.hoverIcon = self.clickIcon = False
-		if iconName:
-			if not self.idleIcon:
-				self.idleIcon = iconName + "-idle"
-			if not self.hoverIcon:
-				self.hoverIcon = iconName + "-hover"
-			if not self.clickIcon:
-				self.clickIcon = iconName + "-click"
+	
+	def idleIcon(self):
+		if self.iconName:
+			return self.iconName + "-idle"
+		else:
+			return False
+	
+	def hoverIcon(self):
+		if self.iconName:
+			return self.iconName + "-hover"
+		else:
+			return False
+	
+	def clickIcon(self):
+		if self.iconName:
+			return self.iconName + "-click"
+		else:
+			return False
 	
 	def iconText(self):
 		return ""
@@ -25,11 +36,14 @@ class Node:
 		return False
 		
 	def width(self):
-		return CONST.BRANCHWIDTH
+		return self.iconWidth
+		
+	def height(self):
+		return self.iconHeight
 		
 class Branch(Node):
-	def __init__(self,PU,iconName=False):
-		Node.__init__(self,PU,iconName)
+	def __init__(self,PU):
+		Node.__init__(self,PU)
 		self.branch = []
 		
 	def isEmpty(self):
@@ -41,7 +55,7 @@ class Branch(Node):
 		return flag
 	
 	def width(self):
-		w = CONST.BRANCHWIDTH
+		w = self.iconWidth
 		for n in self.branch:
 			tempWidth = n.width()
 			if tempWidth > w:
@@ -49,8 +63,9 @@ class Branch(Node):
 		return w
 		
 class IfNode(Node):
+	iconName = "branch"
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"branch")
+		Node.__init__(self,PU)
 		self.condition = operand
 		self.branch = {}
 		self.branch[True] = IfBranch(PU,True)
@@ -60,22 +75,40 @@ class IfNode(Node):
 		return self.branch[True].isEmpty() and self.branch[False].isEmpty()	
 		
 	def width(self):
-		return self.branch[True].width() + self.branch[False].width()
+		trueWidth = self.branch[True].width()
+		falseWidth = self.branch[False].width()
+		
+		if falseWidth:
+			falseWidth += CONST.BRANCHSPACE
+		if trueWidth:
+			trueWidth += CONST.BRANCHSPACE
+		if not falseWidth and not trueWidth:
+			falseWidth += CONST.BRANCHSPACE
+			trueWidth += CONST.BRANCHSPACE
+			
+		nodeWidth = Node.width(self)/2
+		if nodeWidth > trueWidth:
+			trueWidth = nodeWidth + CONST.BRANCHSPACE
+		if nodeWidth > falseWidth:
+			falseWidth = nodeWidth + CONST.BRANCHSPACE
+			
+		return trueWidth + falseWidth
 		
 	def description(self):
 		return "IF " + self.condition.upper()
 		
 class IfBranch(Branch):
 	def __init__(self,PU,operand):
-		Branch.__init__(self,PU,"info")
+		Branch.__init__(self,PU)
 		self.condition = operand
 		
 	def description(self):
 		return str(self.condition).upper()
 			
 class EvaluateNode(Node):
+	iconName = "branch"
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"branch")
+		Node.__init__(self,PU)
 		self.condition = operand
 		self.whenList = []
 		
@@ -90,7 +123,7 @@ class EvaluateNode(Node):
 	def width(self):
 		finalWidth = 0
 		for whenBranch in self.whenList:
-			finalWidth += whenBranch.width()
+			finalWidth += whenBranch.width() + CONST.BRANCHSPACE
 			
 		return finalWidth
 		
@@ -99,7 +132,7 @@ class EvaluateNode(Node):
 	
 class WhenBranch(Branch):
 	def __init__(self,PU,operand):
-		Branch.__init__(self,PU,"info")
+		Branch.__init__(self,PU)
 		self.condition = [operand]
 		
 	def addCondition(self,operand):
@@ -113,8 +146,9 @@ class WhenBranch(Branch):
 		return "WHEN " + condition.upper()
 		
 class LoopBranch(Branch):
+	iconName = "branch"
 	def __init__(self,PU,operand):
-		Branch.__init__(self,PU,"branch")
+		Branch.__init__(self,PU)
 		self.condition = operand
 		
 	def description(self):
@@ -123,18 +157,32 @@ class LoopBranch(Branch):
 class NonLoopBranch(Branch):
 	def __init__(self,PU):
 		Branch.__init__(self,PU)
-		
-class GoToBranch(Branch):
+	
+class PerformNode(Node):
+	iconName = "process"
 	def __init__(self,PU,operand):
-		Branch.__init__(self,PU,"process")
+		Node.__init__(self,PU)
+		self.para = operand
+		
+	def iconText(self):
+		return self.para.upper()
+		
+	def description(self):
+		return "*COMMON PARA*"
+	
+class GoToBranch(Branch):
+	iconName = "process"
+	def __init__(self,PU,operand):
+		Branch.__init__(self,PU)
 		self.link = operand
 		
 	def description(self):
 		return "GO TO " + self.link.upper()
 	
 class ParaNode(Node):
+	iconName = "info"
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"info")
+		Node.__init__(self,PU)
 		self.paraName = operand
 		
 	def isEmpty(self):
@@ -144,9 +192,10 @@ class ParaNode(Node):
 		return self.paraName.upper() + "."
 		
 class CallNode(Node):
+	iconName = "module"
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"module")
-		self.moduleName = operand
+		Node.__init__(self,PU)
+		self.moduleName = operand[1:-1].strip()
 		self.moduleNameVariable = operand
 	
 	def iconText(self):
@@ -156,8 +205,9 @@ class CallNode(Node):
 		return "double-click to open"
 	
 class ExecNode(Node):
+	iconName = "db"
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"db")
+		Node.__init__(self,PU)
 		self.type = operand
 		self.table = ""
 		self.cursor = ""
@@ -184,8 +234,9 @@ class ExecNode(Node):
 		return l
 	
 class FileNode(Node):
+	iconName = "file"
 	def __init__(self,PU,statement,file):
-		Node.__init__(self,PU,"file")
+		Node.__init__(self,PU)
 		self.statement = statement
 		self.file = file
 	
@@ -196,16 +247,18 @@ class FileNode(Node):
 		return self.statement.upper() + " " + self.file.upper()
 	
 class EndNode(Node):
+	iconName = "start"
 	def __init__(self,PU,operand=0):
-		Node.__init__(self,PU,"start")
+		Node.__init__(self,PU)
 		self.errorEnd = operand
 		
 	def iconText(self):
 		return "STOP"
 			
 class LoopBreakPointer(Node):
+	iconName = "info"
 	def __init__(self,PU,operand):
-		Node.__init__(self,PU,"info")
+		Node.__init__(self,PU)
 		self.link = operand
 
 

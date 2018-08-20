@@ -12,13 +12,12 @@ class ProcessingUnit:
 	def __init__(self,inputArg=False):
 		self.performReturnStack = []
 		self.performEndStack = []
-		self.paraStack = []
+		self.paraStack = [""]
 		self.processedLines = []		#list of all lines processed
 		self.programCounter = 0			#points to next sentence to be executed
 		self.inputFile = []
 		self.paraCall = False
 		self.paraReturn = False
-		self.currentPara = ""
 
 		if inputArg.__class__ is ProcessingUnit:
 			self.performReturnStack = inputArg.performReturnStack[:]
@@ -27,7 +26,6 @@ class ProcessingUnit:
 			self.processedLines = inputArg.processedLines[:]
 			self.programCounter = inputArg.programCounter - 0
 			self.inputFile = inputArg.inputFile
-			self.currentPara = inputArg.currentPara
 		
 		if inputArg.__class__ is pfc.ProgramProcessingFile:
 			self.inputFile = inputArg
@@ -66,10 +64,7 @@ class ProcessingUnit:
 		return self.peekCurrentStatement()
 	
 	def pushStack(self,performStart,performEnd):
-		#time.sleep(0.5)
-		#fileaccess.writeLOG(";".join(self.paraStack))
-		currentPara = self.currentPara
-		self.paraStack.append(currentPara)
+		self.paraStack.append("")
 		self.performReturnStack.append(self.processedLines[-1])
 		self.performEndStack.append(performEnd)
 		
@@ -86,15 +81,15 @@ def createChart(PU,ignorePeriod=False):
 	global depthcount
 	lineCount = 0
 	depthcount += 1
-	try:
-		fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	except IndexError:
-		fileaccess.writeLOG("start:index error")
+	#try:
+	#	fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	#except IndexError:
+	#	fileaccess.writeLOG("start:index error")
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-		fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
+	#	fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
 		if PU.paraReturn:
 			break		
 		
@@ -125,7 +120,7 @@ def createChart(PU,ignorePeriod=False):
 		
 		#point node
 		if "para" in lineDict:
-			PU.currentPara = lineDict["para"]
+			PU.paraStack[-1] = lineDict["para"]
 			programObj.append(nodes.ParaNode(PU,lineDict["para"]))
 		if "file" in lineDict:
 			statement = lineDict["file"]
@@ -139,20 +134,20 @@ def createChart(PU,ignorePeriod=False):
 				else:
 					calledProgram = getFieldValue(PU,lineDict["using"][1])
 			
-			if calledProgram:
-				programObj.append(nodes.CallNode(PU,calledProgram))
-			
-			
+			if calledProgram:					
+				if calledProgram not in CONST.IGNOREDMODULES:
+					programObj.append(nodes.CallNode(PU,calledProgram))
+		
 		#returnable statements
 		if "goback" in lineDict:
 			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
 		if "go to" in lineDict:
 			tempObj = nodes.GoToBranch(PU,lineDict["go to"])
-			if lineDict["go to"] not in (PU.paraStack + PU.performEndStack + [PU.currentPara]):
+			if lineDict["go to"] not in (PU.paraStack + PU.performEndStack):
 				goToPU = ProcessingUnit(PU)
 				goToPU.jumpToPara(lineDict["go to"])
-				subChart = createChart(goToPU,True)
-				tempObj.branch = subChart
+			#	subChart = createChart(goToPU,True)
+			#	tempObj.branch = subChart
 			programObj.append(tempObj)
 			tempObj = False
 			
@@ -169,45 +164,43 @@ def createChart(PU,ignorePeriod=False):
 			else:
 				tempObj = nodes.NonLoopBranch(PU)
 			
-			paraAlreadyInPath = False
+			expandPara = True
 			if lineDict["perform"] is not True:
 				ignorePeriodSub = True
-				performStart = lineDict["perform"]
-				performEnd = lineDict["perform"]
+				performEnd = performStart = lineDict["perform"]
+
 				if "thru" in lineDict:
 					performEnd = lineDict["thru"]
 				
-				if performStart in PU.paraStack or performStart == PU.currentPara:
-					paraAlreadyInPath = True
-					tempObj = nodes.LoopBreakPointer(PU,performStart)
+				if performStart in CONST.IGNOREDPARAS:
+					expandPara = False
+					tempObj = nodes.PerformNode(PU,performStart)
 					programObj.append(tempObj)
 					tempObj = False
 				else:
-					PU.pushStack(performStart,performEnd)
+					if performStart in PU.paraStack:
+						expandPara = False
+						tempObj = nodes.LoopBreakPointer(PU,performStart)
+						programObj.append(tempObj)
+						tempObj = False
+					else:
+						PU.pushStack(performStart,performEnd)
 			else:
 				ignorePeriodSub = False
-				
-			if not paraAlreadyInPath:
+			
+			if expandPara:
 				subChart = createChart(PU,ignorePeriodSub)
 				tempObj.branch = subChart
 				programObj.append(tempObj)
 				tempObj = False
 				
+				if isTerminatedBranch(subChart):
+					while isTerminatedBranch(subChart):
+						subChart = createChart(PU,ignorePeriodSub)
+					break
+				
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
-				awkwardReturnFlag = False
-				while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriodSub):
-					awkwardReturnFlag = True
-					createChart(PU,ignorePeriodSub)
-					inputLine = PU.peekCurrentStatement()
-					lineDict = digestSentence(inputLine)
-				if not awkwardReturnFlag:
-					while subChart and (subChart[-1].__class__ is nodes.LoopBranch or subChart[-1].__class__ is nodes.NonLoopBranch):
-						subChart = subChart[-1].branch
-					while subChart and (subChart[-1].__class__ is nodes.GoToBranch or subChart[-1].__class__ is nodes.EndNode):
-						subChart = createChart(PU,ignorePeriodSub)
-						while subChart and (subChart[-1].__class__ is nodes.LoopBranch or subChart[-1].__class__ is nodes.NonLoopBranch):
-							subChart = subChart[-1].branch
 			
 			if "." in lineDict and not ignorePeriod:
 				break
@@ -233,9 +226,8 @@ def createChart(PU,ignorePeriod=False):
 			
 			inputLine = PU.peekCurrentStatement()
 			lineDict = digestSentence(inputLine)
-			
-			while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriod):
-				createChart(PU)
+			while isTerminatedBranch(subChart) and ("." not in lineDict):
+				subChart = createChart(PU)
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
 				
@@ -265,8 +257,8 @@ def createChart(PU,ignorePeriod=False):
 				
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
-				while ("go to" in lineDict or "goback" in lineDict) and ("." not in lineDict or ignorePeriod):
-					createChart(PU)
+				while isTerminatedBranch(subChart) and ("." not in lineDict):
+					subChart = createChart(PU)
 					inputLine = PU.peekCurrentStatement()
 					lineDict = digestSentence(inputLine)
 			
@@ -308,10 +300,10 @@ def createChart(PU,ignorePeriod=False):
 	#	programObj = []
 	
 	depthcount -= 1
-	try:
-		fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	except IndexError:
-		fileaccess.writeLOG("end:index error")
+	#try:
+	#	fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	#except IndexError:
+	#	fileaccess.writeLOG("end:index error")
 	
 	
 	return programObj
@@ -354,6 +346,18 @@ def getFieldValue(PU,field):
 
 	return field
 	
+def isTerminatedBranch(branch):
+	if not branch:
+		return False
+	
+	node = branch[-1]
+	
+	if node.__class__ is nodes.GoToBranch or node.__class__ is nodes.EndNode:
+		return True
+		
+	if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch:
+		return isTerminatedBranch(node.branch)
+	
 def digestSentence(inputLine):
 	lineDict = {}
 	#dont split quoted text into strings
@@ -369,8 +373,6 @@ def digestSentence(inputLine):
 		else:
 			quoteType = '"'
 		
-		quotePos = [i for i,c in enumerate(inputLine) if c in ['"',"'"]]
-		quoteType = inputLine[quotePos[0]]
 		quotePos = [i for i,c in enumerate(inputLine) if c == quoteType]
 		while quotePos:
 			for i in range(quotePos[0],quotePos[1]):
@@ -546,31 +548,4 @@ def getChart(component):
 	fileaccess.closeLib(fileaccess.PROCESSING)
 	
 	return fChart
-		
-def getPU(component):
-	fileaccess.openLib(fileaccess.PROCESSING)
-	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
-	fileaccess.writeDATA("log")
-	file = fileaccess.loadFile(fileaccess.PROCESSING,component)
-	#file = fileaccess.loadDATA("test")
 	
-	fChart = []
-	
-	processingFile = pfc.ProgramProcessingFile(file)
-	PU = ProcessingUnit(processingFile)
-	
-	#fChart = createChart(PU,True)
-	#fileaccess.writePickle(component,fChart)
-	#f2 = fileaccess.loadPickle(component)
-	
-	fileaccess.closeLib(fileaccess.PROCESSING)
-	
-	return PU
-	
-def t1():
-	return getChart("vib3248")
-	
-def t2():
-	return getPU("aib018y")
-	
-#n=t1()

@@ -6,6 +6,8 @@ import nodes
 import createTree
 import fileaccess
 import textwrap
+import sys
+import inspect
 from PIL import ImageTk
 
 class ChartWindow(Tkinter.Frame):
@@ -35,6 +37,7 @@ class ChartWindow(Tkinter.Frame):
 		self.canvas.tag_bind("JumpToLine", "<ButtonRelease-1>", self.openExpandedCode)
 		self.canvas.tag_bind("HasDetails", "<Enter>", self.showToolTip)
 		self.canvas.tag_bind("HasDetails", "<Leave>", self.hideToolTip)
+		self.canvas.tag_bind("CalledProgram", "<Double-Button-1>", self.createNewWindow)
 		
 		self.scrollbarV.config(command=self.canvas.yview)
 		self.scrollbarH.config(command=self.canvas.xview)
@@ -44,18 +47,25 @@ class ChartWindow(Tkinter.Frame):
 	def mouseWheelScroll(self, event):
 		self.canvas.yview_scroll(-1*(event.delta/120), "units")
 		
-		
-		
 	def loadIcons(self):
 		self.icons = {}
 		for iType in ["branch","db","file","info","module","process","start"]:
 			for state in ["idle","hover","click"]:
 				self.icons[iType+"-"+state] = ImageTk.PhotoImage(file=CONST.ICONS + iType + "-" + state +".png")
+		
+		allNodeClasses = inspect.getmembers(nodes, inspect.isclass)
+		for nodeClass in allNodeClasses:
+			nodeClass = nodeClass[1]
+			nodeClass.iconHeight = nodeClass.iconWidth = 0
+			if nodeClass.iconName:
+				nodeClass.iconWidth = self.icons[nodeClass.iconName+"-"+state].width()
+				nodeClass.iconHeight = self.icons[nodeClass.iconName+"-"+state].height()
 				
 	def newBlock(self,node,x,y):
 		tags = ("ButtonIcon","JumpToLine","HasDetails")
-		
-		objId = self.canvas.create_image(x,y,image=self.icons[node.idleIcon],activeimage=self.icons[node.hoverIcon],tags=tags)
+		if node.__class__ is nodes.CallNode:
+			tags = tags + ("CalledProgram",)
+		objId = self.canvas.create_image(x,y,image=self.icons[node.idleIcon()],activeimage=self.icons[node.hoverIcon()],tags=tags)
 		textId = self.canvas.create_text(x,y,text=node.iconText(),font=CONST.FONT,fill="#000000",state=Tkinter.DISABLED)
 		
 		self.nodeDict[objId] = node
@@ -64,17 +74,17 @@ class ChartWindow(Tkinter.Frame):
 
 		if len(linePoints) == 4:
 			prevX,prevY,curX,curY = linePoints
-			
 			if bend == "N":
 				midY = (prevY + curY)/2
 				linePoints = (prevX,prevY,prevX,midY,curX,midY,curX,curY)
 			elif bend == "7":
 				linePoints = (prevX,prevY,curX,prevY,curX,curY)
-			elif bend == "C":
-				outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
+		
+		if len(linePoints) == 5:
+			prevX,prevY,curX,curY,outX = linePoints
+			if bend == "C":
 				linePoints = (prevX,prevY,prevX-outX,prevY,curX-outX,curY,curX,curY)
 			elif bend == "-C":
-				outX = CONST.BRANCHWIDTH/2 - CONST.BRANCHSPACE/2
 				linePoints = (prevX,prevY,prevX+outX,prevY,curX+outX,curY,curX,curY)
 		
 		if node:
@@ -92,14 +102,14 @@ class ChartWindow(Tkinter.Frame):
 		objId = canvas.find_withtag("current")[0]
 		
 		node = self.nodeDict[objId]
-		canvas.itemconfig(objId,activeimage=self.icons[node.clickIcon])
+		canvas.itemconfig(objId,activeimage=self.icons[node.clickIcon()])
 		
 	def resetPressedIcon(self,event):
 		canvas = event.widget
 		objId = canvas.find_withtag("current")[0]
 		
 		node = self.nodeDict[objId]
-		canvas.itemconfig(objId,activeimage=self.icons[node.hoverIcon])
+		canvas.itemconfig(objId,activeimage=self.icons[node.hoverIcon()])
 		
 	def openExpandedCode(self,event):
 		canvas = event.widget
@@ -122,8 +132,10 @@ class ChartWindow(Tkinter.Frame):
 		self.toolTip.append(objId)
 		
 		points = canvas.bbox(objId)
-		x = (points[0] + points[2])/2
-		y = (points[1] + points[3])/2
+		#x = (points[0] + points[2])/2
+		#y = (points[1] + points[3])/2
+		x = canvas.canvasx(event.x)
+		y = canvas.canvasy(event.y)
 		
 		node = self.nodeDict[objId]
 		text = node.description()		
@@ -131,7 +143,7 @@ class ChartWindow(Tkinter.Frame):
 			lines = text.split("\n")
 			lines = [textwrap.fill(line,CONST.TOOLTIPSIZE) for line in lines]
 			text = "\n".join(lines)
-			textLabel = self.canvas.create_text(x,y,text=text,anchor="nw",font=CONST.FONT,fill="#000000",tags="ToolTip",state=Tkinter.DISABLED)
+			textLabel = self.canvas.create_text(x,y,text=text,anchor="nw",font=CONST.TOOLTIPFONT,fill="#000000",tags="ToolTip",state=Tkinter.DISABLED)
 			textBg = self.canvas.create_rectangle(self.canvas.bbox(textLabel),fill="white",tags="ToolTip",state=Tkinter.DISABLED)
 			self.canvas.tag_lower(textBg,textLabel)
 		
@@ -143,11 +155,26 @@ class ChartWindow(Tkinter.Frame):
 		
 		for objId in objIds:
 			canvas.delete(objId)
+			
+	def createNewWindow(self,event):
+		canvas = event.widget
+		objId = canvas.find_withtag("current")[0]
+		
+		node = self.nodeDict[objId]
+		newComponent = node.moduleName
+		global createWindow
+		createWindow(newComponent)
+		print newComponent
 	
 	
 def createFlowChart(chartWindow,nodeList,curX,curY):
-	#firstNodeFlag = True
+	prevHeight = 0
+	currentHeight = 0
 	for node in nodeList:
+		prevHeight = currentHeight
+		currentHeight = node.height()
+		joiningLineLength = prevHeight + currentHeight + CONST.BLOCKSPACE
+		
 		if node.__class__ is nodes.ParaNode:
 			pass#continue
 		if node.isEmpty():
@@ -158,7 +185,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 		else:
 			#if not firstNodeFlag:
 			prevX, prevY = curX, curY
-			curY += CONST.BLOCKHEIGHT/2
+			curY += joiningLineLength/2
 			linePoints = (prevX,prevY,curX,curY)
 			chartWindow.joiningLine(linePoints)
 			chartWindow.newBlock(node,curX,curY)
@@ -166,19 +193,19 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 		
 		if node.__class__ is nodes.LoopBranch:
 			prevX, prevY = curX, curY
-			curY += CONST.BLOCKHEIGHT/2
+			curY += joiningLineLength/2
 			linePoints = (prevX,prevY,curX,curY)
 			chartWindow.joiningLine(linePoints)
 			retX, retY = createFlowChart(chartWindow,node.branch,curX,curY)
-			linePoints = (curX,curY - CONST.BLOCKHEIGHT/2,retX,retY)
-			chartWindow.joiningLine(linePoints,"-C")
+			linePoints = (curX,curY - joiningLineLength/2,retX,retY,node.width()/2+CONST.BRANCHSPACE/2)
+			chartWindow.joiningLine(linePoints,"-C",node=node)
 			
 			curY = retY
 		
 		
 		if node.__class__ is nodes.IfNode:
 			prevX, prevY = curX, curY
-			curY += CONST.BLOCKHEIGHT/2
+			curY += joiningLineLength/2
 			
 			curXT = curX - node.branch[True].width()/2
 			linePoints = (prevX,prevY,curXT,curY)
@@ -225,30 +252,30 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 			oddWhen = [b for i,b in enumerate(arrangedWhen) if i%2 == 0]
 			evenWhen = [b for i,b in enumerate(arrangedWhen) if i%2 == 1]
 			negWidth = posWidth = 0
-			ySeparation = (CONST.BLOCKHEIGHT/2)/len(oddWhen)
+			ySeparation = (joiningLineLength/2)/len(oddWhen)
 			
 			if len(oddWhen) != len(evenWhen):
 				newNodeWidth = evenWhen.pop().width()
 				branchStartX.append(curX)
-				branchStartY.append(curY + CONST.BLOCKHEIGHT/2)
+				branchStartY.append(curY + joiningLineLength/2)
 				negWidth = posWidth = newNodeWidth/2
 				
 			while evenWhen:
 				newNodeWidth = evenWhen.pop().width()
 				branchStartX.insert(0, curX - newNodeWidth/2 - negWidth)
-				branchStartY.insert(0, curY + CONST.BLOCKHEIGHT/2 - ySeparation)
+				branchStartY.insert(0, curY + joiningLineLength/2 - ySeparation)
 					
 				negWidth += newNodeWidth
 				
 			while oddWhen:
 				newNodeWidth = oddWhen.pop().width()
 				branchStartX.append(curX + newNodeWidth/2 + posWidth)
-				branchStartY.append(curY + CONST.BLOCKHEIGHT/2 - ySeparation)
+				branchStartY.append(curY + joiningLineLength/2 - ySeparation)
 				posWidth += newNodeWidth
 				
 				
 			prevX, prevY = curX, curY
-			curY += CONST.BLOCKHEIGHT
+			curY += joiningLineLength
 				
 			branchEndPoints = []
 			
@@ -278,7 +305,7 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 		
 		if node.__class__ is not nodes.EndNode:
 			prevX, prevY = curX, curY
-			curY += CONST.BLOCKHEIGHT/2
+			curY += joiningLineLength/2
 			linePoints = (prevX,prevY,curX,curY)
 			chartWindow.joiningLine(linePoints)
 				
@@ -286,19 +313,33 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 	return curX, curY
 
 	
-
-def main(component="VIID246"):
-	nodes = createTree.getChart(component)
+def isTerminatedBranch(branch):
+	if not branch:
+		return False
+	
+	node = branch[-1]
+	
+	if node.__class__ is nodes.GoToBranch or node.__class__ is nodes.EndNode:
+		return True
+		
+	if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch:
+		return isTerminatedBranch(node.branch)
+	
+	
+def createWindow(component="VIID246"):
 	root = Tkinter.Tk()
 	root.geometry('500x600+10+50')
+	
 	app = ChartWindow(root,component)
-	createFlowChart(app,nodes[:14],200,20)
-	app.mainloop()
-	#root.destroy()
+	nodes = createTree.getChart(component)
+	createFlowChart(app,nodes,200,20)
+	
+	root.mainloop()
 	
 	return nodes
-
-#n=main()
-#n=main("VIBRE016")
-#n=main("VIB3N99")
-n=main("aib018y")
+	
+#n=createWindow()
+#n=createWindow("VIBRE016")
+#n=createWindow("VIC3008")
+n=createWindow("vib3248")
+#n=createWindow("vib3365")

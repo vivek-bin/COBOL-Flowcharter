@@ -22,4 +22,33 @@ def t9(component="VIID246"):
 	print (time.time() - startTime)
 	
 	
-t9()
+class c1:
+	a=2
+	def __init__(self):
+		print self.a
+		self.a+=3
+		print self.a
+		
+class c2(c1):
+	a=22
+	def __init__(self):
+		c1.__init__(self)
+		
+
+def t2():
+	b=c1()
+	print b.a
+	b.a=4
+	print b.a
+	
+	b=c2()
+	print b.a
+	b.a=44
+	print b.a
+	
+	b=c1()
+	print b.a
+	b.a=4
+	print b.a
+	
+t2()

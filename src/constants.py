@@ -1,3 +1,4 @@
+
 PATH = "D:\\CAAGIS flow tracker\\"
 
 MTP = PATH + "MTP\\"
@@ -23,17 +24,30 @@ DATA = PROJECT + "DATA\\"
 ZEROPAD = 8
 
 FONT = ("Times New Roman",10,"bold")
+TOOLTIPFONT = ("Times New Roman",8,"normal")
 NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
 TOOLTIPSIZE = 30
 
 BRANCHSPACE = 10
-BLOCKSPACE = 10
-LINEDIST = 30
-ICONWIDTH = 80
-ICONHEIGHT = ICONWIDTH/2
-BLOCKHEIGHT = ICONHEIGHT + BLOCKSPACE + BLOCKSPACE
-BRANCHWIDTH = ICONWIDTH + BRANCHSPACE + BRANCHSPACE
+BLOCKSPACE = 0
 
 ICONS = PROJECT + "icons\\"
 
+
+FLOWCUSTOM = DATA + "flowchart-customize\\"
+def loadCustomization(inputFileName):
+	f = []
+	try:
+		iFile = open(FLOWCUSTOM+inputFileName+".txt")
+
+		f = [l.rstrip() for l in iFile]
+		iFile.close()
+	except IOError:
+		f = []
+	return f
+
+IGNOREDMODULES = loadCustomization("ignore-program")
+IGNOREDMODULES = [i.lower() for i in IGNOREDMODULES]
+IGNOREDPARAS = loadCustomization("ignore-para")
+IGNOREDPARAS = [i.lower() for i in IGNOREDPARAS]
