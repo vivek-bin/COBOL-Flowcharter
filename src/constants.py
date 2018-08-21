@@ -1,4 +1,5 @@
 
+#paths
 PATH = "D:\\CAAGIS flow tracker\\"
 
 MTP = PATH + "MTP\\"
@@ -21,17 +22,21 @@ TREESZIP = MTPZIP + "TREES.zip"
 
 DATA = PROJECT + "DATA\\"
 
+#line number tracking
 ZEROPAD = 8
 
-FONT = ("League Gothic",3,"bold")
-TOOLTIPFONT = ("Times New Roman",7,"normal")
-NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
+#flowchart values
 TOOLTIPSIZE = 50
 
-ZOOM = 0.3
-BRANCHSPACE = 10*ZOOM
-BLOCKSPACE = 0*ZOOM
+NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
+
+
+ZOOM = 0.6
+BRANCHSPACE = 30
+
+FONT = ("League Gothic",5,"bold")
+TOOLTIPFONT = ("Times New Roman",7,"normal")
 
 ICONS = PROJECT + "icons\\"
 
@@ -49,6 +54,6 @@ def loadCustomization(inputFileName):
 	return f
 
 IGNOREDMODULES = loadCustomization("ignore-program")
-IGNOREDMODULES = [i.lower() for i in IGNOREDMODULES]
+IGNOREDMODULES = [i.strip().lower() for i in IGNOREDMODULES]
 IGNOREDPARAS = loadCustomization("ignore-para")
-IGNOREDPARAS = [i.lower() for i in IGNOREDPARAS]
+IGNOREDPARAS = [i.strip().lower() for i in IGNOREDPARAS]

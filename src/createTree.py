@@ -81,15 +81,15 @@ def createChart(PU,ignorePeriod=False):
 	global depthcount
 	lineCount = 0
 	depthcount += 1
-	try:
-		fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	except IndexError:
-		fileaccess.writeLOG("start:index error")
+	#try:
+	#	fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	#except IndexError:
+	#	fileaccess.writeLOG("start:index error")
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-		fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
+	#	fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
 		if PU.paraReturn:
 			break		
 		
@@ -135,7 +135,8 @@ def createChart(PU,ignorePeriod=False):
 				else:
 					calledProgram = getFieldValue(PU,lineDict["using"][1])
 			
-			if calledProgram:					
+			if calledProgram:
+				calledProgram = calledProgram[1:-1].strip().lower()
 				if calledProgram not in CONST.IGNOREDMODULES:
 					programObj.append(nodes.CallNode(PU,calledProgram))
 		
@@ -301,10 +302,10 @@ def createChart(PU,ignorePeriod=False):
 	#	programObj = []
 	
 	depthcount -= 1
-	try:
-		fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	except IndexError:
-		fileaccess.writeLOG("end:index error")
+	#try:
+	#	fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	#except IndexError:
+	#	fileaccess.writeLOG("end:index error")
 	
 	
 	return programObj
@@ -479,11 +480,6 @@ def digestExecBlock(inputBlock):
 	execDict = {}
 	inputLine = " ".join(inputBlock)
 	words = inputLine.split()
-	
-	#keyList = []
-	#keyList.extend(["type","call","goback","cursor","query","table","."])
-	#for dictKey in keyList:
-	#	execDict[dictKey] = False
 
 	execDict["type"] = words[1]
 	
@@ -529,9 +525,7 @@ def generateChart(file):
 	
 	processingFile = pfc.ProgramProcessingFile(file)
 	PU = ProcessingUnit(processingFile)
-	sys.setrecursionlimit(4000)
 	fChart = createChart(PU,True)
-	sys.setrecursionlimit(1000)
 	
 	return PU, fChart
 	

@@ -7,6 +7,7 @@ class Node:
 	def __init__(self,PU):
 		self.paraStack = PU.paraStack[:]
 		self.lineNo = int(PU.inputFile.procedureDivisionLineNo[PU.processedLines[-1]]) + 1
+		self.empty = False
 	
 	def idleIcon(self):
 		if self.iconName:
@@ -33,7 +34,7 @@ class Node:
 		return ""
 		
 	def isEmpty(self):
-		return False
+		return self.empty
 		
 	def width(self):
 		return self.iconWidth
@@ -60,7 +61,16 @@ class Branch(Node):
 			tempWidth = n.width()
 			if tempWidth > w:
 				w = tempWidth
-		return w
+		if w:
+			return w + CONST.BRANCHSPACE*CONST.ZOOM/2
+		else:
+			return w
+			
+	def nodeHeight(self):
+		return Node.height(self)
+			
+	def nodeWidth(self):
+		return Node.width(self)
 		
 class IfNode(Node):
 	iconName = "branch"
@@ -78,21 +88,10 @@ class IfNode(Node):
 		trueWidth = self.branch[True].width()
 		falseWidth = self.branch[False].width()
 		
-		if falseWidth:
-			falseWidth += CONST.BRANCHSPACE
-		if trueWidth:
-			trueWidth += CONST.BRANCHSPACE
-		if not falseWidth and not trueWidth:
-			falseWidth += CONST.BRANCHSPACE
-			trueWidth += CONST.BRANCHSPACE
-			
-		nodeWidth = Node.width(self)/2
-		if nodeWidth > trueWidth:
-			trueWidth = nodeWidth + CONST.BRANCHSPACE
-		if nodeWidth > falseWidth:
-			falseWidth = nodeWidth + CONST.BRANCHSPACE
-			
-		return trueWidth + falseWidth
+		if Node.width(self) > trueWidth + falseWidth:
+			return Node.width(self)
+		else:
+			return trueWidth + falseWidth
 		
 	def description(self):
 		return "IF " + self.condition.upper()
@@ -123,7 +122,7 @@ class EvaluateNode(Node):
 	def width(self):
 		finalWidth = 0
 		for whenBranch in self.whenList:
-			finalWidth += whenBranch.width() + CONST.BRANCHSPACE
+			finalWidth += whenBranch.width() + CONST.BRANCHSPACE*CONST.ZOOM
 			
 		return finalWidth
 		
@@ -150,6 +149,9 @@ class LoopBranch(Branch):
 	def __init__(self,PU,operand):
 		Branch.__init__(self,PU)
 		self.condition = operand
+		
+	def width(self):
+		return Branch.width(self) + CONST.BRANCHSPACE*CONST.ZOOM
 		
 	def description(self):
 		return self.condition.upper()
@@ -183,11 +185,9 @@ class ParaNode(Node):
 	iconName = "info"
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
+		self.empty = True
 		self.paraName = operand
-		
-	def isEmpty(self):
-		return True
-		
+	
 	def description(self):
 		return self.paraName.upper() + "."
 		
@@ -195,7 +195,7 @@ class CallNode(Node):
 	iconName = "module"
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
-		self.moduleName = operand[1:-1].strip()
+		self.moduleName = operand
 		self.moduleNameVariable = operand
 	
 	def iconText(self):
