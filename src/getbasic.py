@@ -3,16 +3,12 @@ import nodes
 
 def collectDetails(flow,calls,tables):
 	for node in flow:
-		
 		if node.__class__ is nodes.CallNode:
 			calls.append(node)
 		if node.__class__ is nodes.ExecNode:
 			if node.type == "sql":
 				tables.append(node)
 			
-			
-			
-		
 		if node.__class__ is nodes.NonLoopBranch or node.__class__ is nodes.LoopBranch or node.__class__ is nodes.GoToBranch:
 			collectDetails(node.branch,calls,tables)
 		

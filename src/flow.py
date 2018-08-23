@@ -49,7 +49,6 @@ class ChartWindow(Tkinter.Frame):
 		
 		self.canvas.bind("<Enter>",self.canvasActive)
 		self.canvas.bind("<Leave>",self.canvasUnactive)
-		#self.canvas.bind_all("<MouseWheel>", self.mouseWheelScroll)
 		
 	def canvasUnactive(self,event):
 		self.canvas.unbind_all("<MouseWheel>")
@@ -221,15 +220,7 @@ class ChartWindow(Tkinter.Frame):
 		
 		node = self.nodeDict[objId]
 		newComponent = node.moduleName
-		global createWindow
 		createWindow(newComponent)
-		print newComponent
-	
-	
-class ChartData():
-	def __init(self,component):
-		self.component = component
-		self.nodes = []
 	
 def createFlowChart(chartWindow,nodeList,curX,curY):
 	prevHeight = 0

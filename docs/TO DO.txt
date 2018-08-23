@@ -3,7 +3,8 @@ generating tree
 - aib018y	- too big
 - exec cics return/call/tsq etcetc
 
-			
+
+
 generating flowchart
 - loopbreakpointer, goto
 - go to : jump to para instead of line joining the two as itll be messy
@@ -15,4 +16,4 @@ generating flowchart
 			p2.
 			go to p1.
 - search?
-
+- branch end checks etc fir evaluate

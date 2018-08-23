@@ -496,12 +496,12 @@ def digestExecBlock(inputBlock):
 	
 	if execDict["type"] == "sql":
 		cursorPos = fromPos = intoPos = wherePos = False
-		if "into" in words:
-			execDict["table"] = words[words.index("into")+1]
 		if "from" in words:
 			execDict["table"] = words[words.index("from")+1]
-		if "update" in words:
+		elif "update" in words:
 			execDict["table"] = words[words.index("update")+1]
+		elif "into" in words:
+			execDict["table"] = words[words.index("into")+1]
 		
 		for cursorPreword in ["declare","open","close","fetch"]:
 			if cursorPreword in words:
@@ -517,6 +517,7 @@ def digestExecBlock(inputBlock):
 		for queryWord in ["select","open","close","fetch","update","delete","insert"]:
 			if queryWord in words:
 				execDict["query"] = queryWord
+				break
 				
 	return execDict
 
