@@ -145,7 +145,7 @@ class WhenBranch(Branch):
 		return "WHEN " + condition.upper()
 		
 class LoopBranch(Branch):
-	iconName = "branch"
+	iconName = "loop"
 	def __init__(self,PU,operand):
 		Branch.__init__(self,PU)
 		self.condition = operand

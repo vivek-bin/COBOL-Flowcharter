@@ -17,10 +17,12 @@ class ChartWindow(Tkinter.Frame):
 		self.parent = parent
 		self.nodeDict = {}
 		self.component = component
-		self.initUI()
-		self.loadIcons()
 		self.toolTip = []
 		self.zoomScale = 1.0
+		self.icons = {}
+		self.iconImages = {}
+		self.initUI()
+		self.loadIcons()
 	
 	def initUI(self):
 		self.scrollbarV = Tkinter.Scrollbar(self,orient=Tkinter.VERTICAL)
@@ -32,9 +34,8 @@ class ChartWindow(Tkinter.Frame):
 		self.config(bg = '#F0F0F0')
 		self.pack(fill = Tkinter.BOTH, expand = 1)
 		#create canvas
-		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 600)
+		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 600,state=Tkinter.NORMAL)
 		self.canvas.pack(side = Tkinter.LEFT, anchor = Tkinter.NW, expand=True, fill=Tkinter.BOTH, padx = 10, pady = 10)
-		self.canvas.bind_all("<Key>",self.zoom)
 		self.canvas.tag_bind("ButtonIcon", "<ButtonPress-1>", self.setPressedIcon)
 		self.canvas.tag_bind("ButtonIcon", "<ButtonRelease-1>", self.resetPressedIcon)
 		self.canvas.tag_bind("JumpToLine", "<ButtonRelease-1>", self.openExpandedCode)
@@ -46,40 +47,70 @@ class ChartWindow(Tkinter.Frame):
 		self.scrollbarV.config(command=self.canvas.yview)
 		self.scrollbarH.config(command=self.canvas.xview)
 		
+		self.canvas.bind("<Enter>",self.canvasActive)
+		self.canvas.bind("<Leave>",self.canvasUnactive)
+		#self.canvas.bind_all("<MouseWheel>", self.mouseWheelScroll)
+		
+	def canvasUnactive(self,event):
+		self.canvas.unbind_all("<MouseWheel>")
+		
+	def canvasActive(self,event):
 		self.canvas.bind_all("<MouseWheel>", self.mouseWheelScroll)
 		
-	def zoom(self,event):
-		canvas = event.widget
-		key = event.char
+	def zoom(self, key):
 		redrawFlag = False
+		zoomAmount = 1.0
 		if key == "+" and self.zoomScale < 1.0:
-			self.zoomScale *= 1.1
+			zoomAmount = 1.1
 			redrawFlag = True
-			if self.zoomScale > 1.0:
-				self.zoomScale = 1.0
 		
-		if key == "-" and self.zoomScale > 0.05:
-			self.zoomScale /= 1.1
+		if key == "-" and self.zoomScale > 0.1:
+			zoomAmount = 1.0/1.1
 			redrawFlag = True
-			if self.zoomScale < 0.05:
-				self.zoomScale = 0.05
+		
 		if redrawFlag:
-			canvas.scale("all",0,0,self.zoomScale,self.zoomScale)
+			self.zoomScale *= zoomAmount
+			self.canvas.scale("all",0,0,zoomAmount,zoomAmount)
 		
+			for iconName in self.iconImages.keys():
+				img = self.iconImages[iconName]
+				imgResize = (int(i*self.zoomScale) for i in img.size)
+				img = img.resize(imgResize, Image.ANTIALIAS)
+				self.icons[iconName] = ImageTk.PhotoImage(img)
+				
+			buttons = self.canvas.find_withtag("ButtonIcon")
+			for button in buttons:
+				node = self.nodeDict[button]
+				self.canvas.itemconfig(button,image=self.icons[node.idleIcon()],activeimage=self.icons[node.hoverIcon()])
+			
+			buttons = self.canvas.find_withtag("ButtonText")
+			newFont = (CONST.FONT[0],1+int(CONST.FONT[1]*self.zoomScale*0.9),CONST.FONT[2])
+			for button in buttons:
+				self.canvas.itemconfig(button,font=newFont)
+				
+			chartBox = self.canvas.bbox("all")
+			chartBorder = 50
+			chartBox = (chartBox[0]-chartBorder,chartBox[1]-chartBorder,chartBox[2]+chartBorder,chartBox[3]+chartBorder)
+			self.canvas.configure(scrollregion = chartBox)
 		
-		
-	
 	def mouseWheelScroll(self, event):
-		self.canvas.yview_scroll(-1*(event.delta/120), "units")
-		
+		scroll = -1 * event.delta / 120
+		if event.state == 0:
+			self.canvas.yview_scroll(scroll, "units")
+		if event.state == 4:
+			if scroll < 0:
+				self.zoom("+")
+			else:
+				self.zoom("-")
+			
 	def loadIcons(self):
-		self.icons = {}
-		for iType in ["branch","db","file","info","module","process","start"]:
+		for iType in ["branch","db","file","info","module","process","start","loop"]:
 			for state in ["idle","hover","click"]:
 				imgName = iType + "-" + state
 				img = Image.open(CONST.ICONS + imgName +".png")
 				imgResize = (int(i*CONST.ZOOM) for i in img.size)
 				img = img.resize(imgResize, Image.ANTIALIAS)
+				self.iconImages[imgName] = img
 				self.icons[imgName] = ImageTk.PhotoImage(img)
 		
 		allNodeClasses = inspect.getmembers(nodes, inspect.isclass)
@@ -88,13 +119,13 @@ class ChartWindow(Tkinter.Frame):
 			if nodeClass.iconName:
 				nodeClass.iconWidth = self.icons[nodeClass.iconName+"-"+state].width()
 				nodeClass.iconHeight = self.icons[nodeClass.iconName+"-"+state].height()
-				
+	
 	def newBlock(self,node,x,y):
 		tags = ("ButtonIcon","JumpToLine","HasDetails")
 		if node.__class__ is nodes.CallNode:
 			tags = tags + ("CalledProgram",)
 		objId = self.canvas.create_image(x,y,image=self.icons[node.idleIcon()],activeimage=self.icons[node.hoverIcon()],tags=tags)
-		textId = self.canvas.create_text(x,y,text=node.iconText(),font=CONST.FONT,fill="#000000",state=Tkinter.DISABLED)
+		textId = self.canvas.create_text(x,y,text=node.iconText(),font=CONST.FONT,fill="#000000",state=Tkinter.DISABLED,tags="ButtonText")
 		
 		self.nodeDict[objId] = node
 		
@@ -195,6 +226,11 @@ class ChartWindow(Tkinter.Frame):
 		print newComponent
 	
 	
+class ChartData():
+	def __init(self,component):
+		self.component = component
+		self.nodes = []
+	
 def createFlowChart(chartWindow,nodeList,curX,curY):
 	prevHeight = 0
 	currentHeight = 0
@@ -237,8 +273,8 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 			tempX = {}
 			tempY = {}
 			terminatedBranch = {}
-			tempX[True] = curX - node.branch[False].width()/2		#proper positioning(use opposite branch width)
-			tempX[False] = curX + node.branch[True].width()/2		#proper positioning(use opposite branch width)
+			tempX[True] = curX - node.branch[False].width()/2		#use opposite branch width
+			tempX[False] = curX + node.branch[True].width()/2		#use opposite branch width
 			
 			for branch in [True,False]:
 				branchNode = node.branch[branch]
@@ -339,15 +375,9 @@ def createFlowChart(chartWindow,nodeList,curX,curY):
 		if node.__class__ is not nodes.EndNode:
 			linePoints = (prevX,prevY,curX,curY)
 			chartWindow.joiningLine(linePoints)
-				
-	#prevX, prevY = curX, curY
-	#curY += joiningLineLength/2
-	#if not isTerminatedBranch(nodeList):
-	#	linePoints = (prevX,prevY,curX,curY)
-	#	chartWindow.joiningLine(linePoints)
+	
 	
 	return curX, curY
-
 	
 def isTerminatedBranch(branch):
 	if not branch:
@@ -361,37 +391,34 @@ def isTerminatedBranch(branch):
 	if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch:
 		return isTerminatedBranch(node.branch)
 	
+def createWindow(component):
+	root = Tkinter.Toplevel()
+	RWidth = int(root.winfo_screenwidth()*0.5)
+	RHeight = int(root.winfo_screenheight()*0.95)
+	root.geometry(("%dx%d")%(RWidth,RHeight))
 	
-def createNewChart(app,nodes):
-	app.canvas.delete("all")
+	nodes = createTree.getChart(component)
+	
+	app = ChartWindow(root,component)
 	createFlowChart(app,nodes,int(app.winfo_screenwidth()*0.25),20)
 	chartBox = app.canvas.bbox("all")
 	chartBorder = 50
 	chartBox = (chartBox[0]-chartBorder,chartBox[1]-chartBorder,chartBox[2]+chartBorder,chartBox[3]+chartBorder)
 	app.canvas.configure(scrollregion = chartBox)
 
-def createWindow(component="VIID246"):
-	startTime = time.time()
 	
+def main(component="VIID246"):
+	startTime = time.time()
 	root = Tkinter.Tk()
-	RWidth = int(root.winfo_screenwidth()*0.5)
-	RHeight = int(root.winfo_screenheight()*0.95)
-	root.geometry(("%dx%d")%(RWidth,RHeight))
 	
-	nodes = createTree.getChart(component)
-	print time.time() - startTime
-	startTime = time.time()
-	
-	app = ChartWindow(root,component)
-	createNewChart(app,nodes)
+	createWindow(component)
 	
 	print time.time() - startTime
+	
 	root.mainloop()
 	
-	return nodes
-	
-#n=createWindow()
-#n=createWindow("VIBRE016")
-#n=createWindow("vcc1060")
-n=createWindow("vib3248")
-#n=createWindow("vib3365")
+#n=main()
+#n=main("VIBRE016")
+#n=main("vcc1060")
+n=main("vib3248")
+#n=main("vib3365")

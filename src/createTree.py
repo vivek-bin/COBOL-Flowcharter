@@ -530,13 +530,17 @@ def generateChart(file):
 	return PU, fChart
 	
 def getChart(component):
+	PU = False
+	fChart = []
+	
 	fileaccess.openLib(fileaccess.PROCESSING)
 	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
 	fileaccess.writeDATA("log")
 	file = fileaccess.loadFile(fileaccess.PROCESSING,component)
 	#file = fileaccess.loadDATA("test")
-	
-	PU, fChart = generateChart(file)
+	if file:
+		PU, fChart = generateChart(file)
+		
 	#fileaccess.writePickle(component,fChart)
 	#f2 = fileaccess.loadPickle(component)
 	

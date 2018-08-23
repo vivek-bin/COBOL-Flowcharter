@@ -32,10 +32,10 @@ TOOLTIPSIZE = 50
 NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
 
-ZOOM = 0.6
+ZOOM = 1
 BRANCHSPACE = 30
 
-FONT = ("League Gothic",5,"bold")
+FONT = ("League Gothic",9,"bold")
 TOOLTIPFONT = ("Times New Roman",7,"normal")
 
 ICONS = PROJECT + "icons\\"

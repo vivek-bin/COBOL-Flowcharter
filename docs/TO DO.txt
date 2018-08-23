@@ -6,19 +6,13 @@ generating tree
 			
 generating flowchart
 - loopbreakpointer, goto
-- zoom
-- positioning of chart
 - go to : jump to para instead of line joining the two as itll be messy
-							- proper spacing of blocks
-									- end of IF, add space before joining
-							- proper terminating(GOBACK, GO TO) and joining(end of IF) of branches
 - program calls to be ignored/para's not to be expanded
 		- check if ending para
-- opening new flowchart on double-click
 - go to - 
 			p1.
 			....
 			p2.
 			go to p1.
-- flowchart map?
 - search?
+
