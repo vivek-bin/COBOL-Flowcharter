@@ -500,7 +500,7 @@ def digestExecBlock(inputBlock):
 			execDict["table"] = words[words.index("from")+1]
 		elif "update" in words:
 			execDict["table"] = words[words.index("update")+1]
-		elif "into" in words:
+		elif "insert" in words:
 			execDict["table"] = words[words.index("into")+1]
 		
 		for cursorPreword in ["declare","open","close","fetch"]:

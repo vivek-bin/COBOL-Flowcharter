@@ -11,7 +11,8 @@ import inspect
 import time
 from PIL import Image,ImageTk
 
-class ChartWindow(Tkinter.Frame):
+
+class ChartFrame(Tkinter.Frame):
 	def __init__(self, parent,component):
 		Tkinter.Frame.__init__(self, parent)
 		self.parent = parent
@@ -35,7 +36,12 @@ class ChartWindow(Tkinter.Frame):
 		self.pack(fill = Tkinter.BOTH, expand = 1)
 		#create canvas
 		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 600,state=Tkinter.NORMAL)
-		self.canvas.pack(side = Tkinter.LEFT, anchor = Tkinter.NW, expand=True, fill=Tkinter.BOTH, padx = 10, pady = 10)
+		self.canvas.pack(side = Tkinter.LEFT, anchor = Tkinter.NW, expand=False, fill=Tkinter.BOTH, padx = 10, pady = 10)
+		
+		#self.canvas.bind("<Enter>",self.canvasActive)
+		#self.bind_all("<MouseWheel>", self.mouseWheelScroll)
+		#self.canvas.bind("<Leave>",self.canvasUnactive)
+		
 		self.canvas.tag_bind("ButtonIcon", "<ButtonPress-1>", self.setPressedIcon)
 		self.canvas.tag_bind("ButtonIcon", "<ButtonRelease-1>", self.resetPressedIcon)
 		self.canvas.tag_bind("JumpToLine", "<ButtonRelease-1>", self.openExpandedCode)
@@ -47,8 +53,6 @@ class ChartWindow(Tkinter.Frame):
 		self.scrollbarV.config(command=self.canvas.yview)
 		self.scrollbarH.config(command=self.canvas.xview)
 		
-		self.canvas.bind("<Enter>",self.canvasActive)
-		self.canvas.bind("<Leave>",self.canvasUnactive)
 		
 	def canvasUnactive(self,event):
 		self.canvas.unbind_all("<MouseWheel>")
@@ -153,7 +157,7 @@ class ChartWindow(Tkinter.Frame):
 			tags = ("Lines")
 			self.canvas.create_line(linePoints,fill="#000000",tags=tags,width=1)
 			
-		self.canvas.tag_lower(tags[0])
+		self.canvas.tag_lower("Lines")
 	
 	def setPressedIcon(self,event):
 		canvas = event.widget
@@ -220,196 +224,228 @@ class ChartWindow(Tkinter.Frame):
 		
 		node = self.nodeDict[objId]
 		newComponent = node.moduleName
-		createWindow(newComponent)
+		createNewWindow(newComponent)
 	
-def createFlowChart(chartWindow,nodeList,curX,curY):
-	prevHeight = 0
-	currentHeight = 0
-	joiningLineLength = prevHeight + currentHeight
-	for node in nodeList:
-		prevHeight = currentHeight
-		currentHeight = node.height()
+	
+class ChartWindow(Tkinter.Toplevel):
+	charts = {}
+	def __init__(self,component):
+		component = component.upper()
+		
+		self.chartFrame  = False
+		self.component = component
+		self.createWindow(component)
+		self.protocol("WM_DELETE_WINDOW", self.eraseChart)
+		
+		#self.bind("<Enter>",self.activeWindow)
+		#self.bind_all("<MouseWheel>", self.mouseWheelScroll)
+		#self.bind("<Leave>",self.UnactiveWindow)
+		
+		self.chartFrame.bind("<MouseWheel>",self.chartFrame.mouseWheelScroll)
+		
+	def eraseChart(self):
+		del ChartWindow.charts[self.component]
+		self.destroy()
+	
+	def drawFlowChart(self,nodeList,curX,curY):
+		prevHeight = 0
+		currentHeight = 0
 		joiningLineLength = prevHeight + currentHeight
-		
-		if node.__class__ is nodes.ParaNode:
-			pass#continue
-		if node.isEmpty():
-			continue
-		
-		if node.__class__ is nodes.NonLoopBranch:
-			curX, curY = createFlowChart(chartWindow,node.branch,curX,curY)
-		else:
-			prevX, prevY = curX, curY
-			curY += joiningLineLength/2
-			linePoints = (prevX,prevY,curX,curY)
-			chartWindow.joiningLine(linePoints)
-			chartWindow.newBlock(node,curX,curY)
-		
-		if node.__class__ is nodes.LoopBranch:
-			prevX, prevY = curX, curY
-			curY += joiningLineLength/2
-			linePoints = (prevX,prevY,curX,curY)
-			chartWindow.joiningLine(linePoints)
-			retX, retY = createFlowChart(chartWindow,node.branch,curX,curY)
-			linePoints = (curX,curY-joiningLineLength/2,retX,retY,node.width()/2+node.nodeWidth()/8)
-			chartWindow.joiningLine(linePoints,"-C",node=node)
+		for node in nodeList:
+			prevHeight = currentHeight
+			currentHeight = node.height()
+			joiningLineLength = prevHeight + currentHeight
 			
-			curY = retY
-		
-		
-		if node.__class__ is nodes.IfNode:
-			prevX, prevY = curX, curY
-			curY += joiningLineLength/2
+			if node.__class__ is nodes.ParaNode:
+				pass#continue
+			if node.isEmpty():
+				continue
 			
-			tempX = {}
-			tempY = {}
-			terminatedBranch = {}
-			tempX[True] = curX - node.branch[False].width()/2		#use opposite branch width
-			tempX[False] = curX + node.branch[True].width()/2		#use opposite branch width
-			
-			for branch in [True,False]:
-				branchNode = node.branch[branch]
-				linePoints = (prevX,prevY,tempX[branch],curY)
-				chartWindow.joiningLine(linePoints,bend="7",node=branchNode)
-				tempX[branch], tempY[branch] = createFlowChart(chartWindow,branchNode.branch,tempX[branch],curY)
-				terminatedBranch[branch] = isTerminatedBranch(branchNode.branch)
-			
-			if tempY[True] < tempY[False]:
-				extX, extY = tempX[True], tempY[False]
+			if node.__class__ is nodes.NonLoopBranch:
+				curX, curY = self.drawFlowChart(node.branch,curX,curY)
 			else:
-				extX, extY = tempX[False], tempY[True]
+				prevX, prevY = curX, curY
+				curY += joiningLineLength/2
+				linePoints = (prevX,prevY,curX,curY)
+				self.chartFrame.joiningLine(linePoints)
+				self.chartFrame.newBlock(node,curX,curY)
 			
-			for branch in [True,False]:
-				if not terminatedBranch[branch]:
-					if tempY[branch] != extY:
-						linePoints = (tempX[branch],tempY[branch],tempX[branch],extY)
-						chartWindow.joiningLine(linePoints)
-					linePoints = (tempX[branch],extY,curX,extY)
-					chartWindow.joiningLine(linePoints)
-			
-			curY = extY
-		
-		
-		if node.__class__ is nodes.EvaluateNode:
-			arrangedWhen = []
-			for i,branch in enumerate(node.whenList):
-				breakFlag = False
-				for j,branch2 in enumerate(arrangedWhen):
-					if branch2.width() > branch.width():
-						arrangedWhen.insert(j,branch)
-						breakFlag = True
-						break
-				if not breakFlag:
-					arrangedWhen.append(branch)
-			
-			
-			branchStartX = []
-			branchStartY = []
-			branchStartNum = list(range(0,len(arrangedWhen),2)) + list(range(1,len(arrangedWhen),2))
-			
-			oddWhen = [b for i,b in enumerate(arrangedWhen) if i%2 == 0]
-			evenWhen = [b for i,b in enumerate(arrangedWhen) if i%2 == 1]
-			negWidth = posWidth = 0
-			ySeparation = (joiningLineLength/2)/len(oddWhen)
-			
-			if len(oddWhen) != len(evenWhen):
-				newNodeWidth = evenWhen.pop().width()
-				branchStartX.append(curX)
-				branchStartY.append(curY + joiningLineLength/2)
-				negWidth = posWidth = newNodeWidth/2
+			if node.__class__ is nodes.LoopBranch:
+				prevX, prevY = curX, curY
+				curY += joiningLineLength/2
+				linePoints = (prevX,prevY,curX,curY)
+				self.chartFrame.joiningLine(linePoints)
+				retX, retY = self.drawFlowChart(node.branch,curX,curY)
+				linePoints = (curX,curY-joiningLineLength/2,retX,retY,node.width()/2+node.nodeWidth()/8)
+				self.chartFrame.joiningLine(linePoints,"-C",node=node)
 				
-			while evenWhen:
-				newNodeWidth = evenWhen.pop().width()
-				branchStartX.insert(0, curX - newNodeWidth/2 - negWidth)
-				branchStartY.insert(0, curY + joiningLineLength/2 - ySeparation)
-					
-				negWidth += newNodeWidth
+				curY = retY
+			
+			
+			if node.__class__ is nodes.IfNode:
+				prevX, prevY = curX, curY
+				curY += joiningLineLength/2
 				
-			while oddWhen:
-				newNodeWidth = oddWhen.pop().width()
-				branchStartX.append(curX + newNodeWidth/2 + posWidth)
-				branchStartY.append(curY + joiningLineLength/2 - ySeparation)
-				posWidth += newNodeWidth
+				tempX = {}
+				tempY = {}
+				terminatedBranch = {}
+				tempX[True] = curX - node.branch[False].width()/2		#use opposite branch width
+				tempX[False] = curX + node.branch[True].width()/2		#use opposite branch width
 				
+				for branch in [True,False]:
+					branchNode = node.branch[branch]
+					linePoints = (prevX,prevY,tempX[branch],curY)
+					self.chartFrame.joiningLine(linePoints,bend="7",node=branchNode)
+					tempX[branch], tempY[branch] = self.drawFlowChart(branchNode.branch,tempX[branch],curY)
+					terminatedBranch[branch] = self.isTerminatedBranch(branchNode.branch)
 				
-			prevX, prevY = curX, curY
-			curY += joiningLineLength
+				if tempY[True] < tempY[False]:
+					extX, extY = tempX[True], tempY[False]
+				else:
+					extX, extY = tempX[False], tempY[True]
 				
-			branchEndPoints = []
+				for branch in [True,False]:
+					if not terminatedBranch[branch]:
+						if tempY[branch] != extY:
+							linePoints = (tempX[branch],tempY[branch],tempX[branch],extY)
+							self.chartFrame.joiningLine(linePoints)
+						linePoints = (tempX[branch],extY,curX,extY)
+						self.chartFrame.joiningLine(linePoints)
+				
+				curY = extY
 			
-			for i,branchNum in enumerate(branchStartNum):
-				newNode = arrangedWhen[branchNum]
-				linePoints = (prevX,prevY,branchStartX[i],branchStartY[i],branchStartX[i],curY)
-				chartWindow.joiningLine(linePoints,node=newNode)
-				endPoints = createFlowChart(chartWindow,newNode.branch,branchStartX[i],curY)
-				branchEndPoints.append(endPoints)
 			
-			
-			minX = branchStartX[0]
-			maxX = branchStartX[-1]
-			maxY = -1
-			for point in branchEndPoints:
-				if point[1] > maxY:
-					maxY = point[1]
-			
-			for point in branchEndPoints:
-				if point[1] != maxY:
-					linePoints = (point[0],point[1],point[0],maxY)
-					chartWindow.joiningLine(linePoints)
-			linePoints = (minX,maxY,maxX,maxY)
-			chartWindow.joiningLine(linePoints)
-			
-			curY = maxY
-		
-		prevX, prevY = curX, curY
-		curY += joiningLineLength/2
-		if node.__class__ is not nodes.EndNode:
-			linePoints = (prevX,prevY,curX,curY)
-			chartWindow.joiningLine(linePoints)
-	
-	
-	return curX, curY
-	
-def isTerminatedBranch(branch):
-	if not branch:
-		return False
-	
-	node = branch[-1]
-	
-	if node.__class__ is nodes.GoToBranch or node.__class__ is nodes.EndNode:
-		return True
-		
-	if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch:
-		return isTerminatedBranch(node.branch)
-	
-def createWindow(component):
-	root = Tkinter.Toplevel()
-	RWidth = int(root.winfo_screenwidth()*0.5)
-	RHeight = int(root.winfo_screenheight()*0.95)
-	root.geometry(("%dx%d")%(RWidth,RHeight))
-	
-	nodes = createTree.getChart(component)
-	
-	app = ChartWindow(root,component)
-	createFlowChart(app,nodes,int(app.winfo_screenwidth()*0.25),20)
-	chartBox = app.canvas.bbox("all")
-	chartBorder = 50
-	chartBox = (chartBox[0]-chartBorder,chartBox[1]-chartBorder,chartBox[2]+chartBorder,chartBox[3]+chartBorder)
-	app.canvas.configure(scrollregion = chartBox)
+			if node.__class__ is nodes.EvaluateNode:
+				arrangedWhen = []
+				for i,branch in enumerate(node.whenList):
+					breakFlag = False
+					for j,branch2 in enumerate(arrangedWhen):
+						if branch2.width() > branch.width():
+							arrangedWhen.insert(j,branch)
+							breakFlag = True
+							break
+					if not breakFlag:
+						arrangedWhen.append(branch)
+				
+				totalWidth = 0
+				for branch in arrangedWhen:
+					totalWidth += branch.width()
 
+				prevX, prevY = curX, curY
+				curY += joiningLineLength
+					
+				branchEndPoints = []
+				
+				evenWidth = 0
+				oddWidth = 0
+				for i,newNode in enumerate(arrangedWhen):
+					newNodeWidth = newNode.width()
+					if i % 2:
+						newX = curX + evenWidth + newNodeWidth/2 - totalWidth/2
+						evenWidth += newNodeWidth
+					else:
+						newX = curX - oddWidth - newNodeWidth/2 + totalWidth/2
+						oddWidth += newNodeWidth
+					
+					linePoints = (prevX,prevY,newX,curY - joiningLineLength/2,newX,curY)
+					self.chartFrame.joiningLine(linePoints,node=newNode)
+					endPoints = self.drawFlowChart(newNode.branch,newX,curY)
+					branchEndPoints.append(endPoints)
+				
+				
+				maxY = -1
+				for point in branchEndPoints:
+					if point[1] > maxY:
+						maxY = point[1]
+				curY = maxY
+				
+				prevX, prevY = curX, curY
+				curY += joiningLineLength
+				
+				
+				minX = branchEndPoints[0][0]
+				try:
+					maxX = branchEndPoints[1][0]
+				except IndexError:
+					maxX = minX
+				
+				for i,point in enumerate(branchEndPoints):
+					if not self.isTerminatedBranch(arrangedWhen[i].branch):
+						if point[1] != maxY:
+							linePoints = (point[0],point[1],point[0],maxY)
+							self.chartFrame.joiningLine(linePoints)
+						linePoints = (point[0],maxY,curX,curY)
+						self.chartFrame.joiningLine(linePoints,bend="N")
+				
+			
+			prevX, prevY = curX, curY
+			curY += joiningLineLength/2
+			if node.__class__ is not nodes.EndNode:
+				linePoints = (prevX,prevY,curX,curY)
+				self.chartFrame.joiningLine(linePoints)
+		
+		
+		return curX, curY
+		
+	def isTerminatedBranch(self,branch):
+		if not branch:
+			return False
+		
+		node = branch[-1]
+		
+		if node.__class__ is nodes.GoToBranch or node.__class__ is nodes.EndNode:
+			return True
+			
+		if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch:
+			return self.isTerminatedBranch(node.branch)
 	
-def main(component="VIID246"):
-	startTime = time.time()
+	def alreadyExists(self,component):
+		if component in ChartWindow.charts:
+			ChartWindow.charts[component].focus_set()
+			return True
+		else:
+			return False
+	
+	def createWindow(self,component):
+		startTime = time.time()
+		
+		nodes = createTree.getChart(component)
+		if not nodes:
+			return
+		
+		Tkinter.Toplevel.__init__(self)
+		RWidth = int(self.winfo_screenwidth()*0.5)
+		RHeight = int(self.winfo_screenheight()*0.95)
+		self.geometry(("%dx%d")%(RWidth,RHeight))
+		
+		self.chartFrame = ChartFrame(self,self.component)
+		self.drawFlowChart(nodes,int(self.chartFrame.winfo_screenwidth()*0.25),20)
+		chartBox = self.chartFrame.canvas.bbox("all")
+		chartBorder = 50
+		chartBox = (chartBox[0]-chartBorder,chartBox[1]-chartBorder,chartBox[2]+chartBorder,chartBox[3]+chartBorder)
+		self.chartFrame.canvas.configure(scrollregion = chartBox)
+		
+		print time.time() - startTime
+
+
+def createNewWindow(component):
+	if component in ChartWindow.charts:
+		ChartWindow.charts[component].focus_set()
+	else:
+		ChartWindow.charts[component] = ChartWindow(component)
+		
+		
+def main():
 	root = Tkinter.Tk()
 	
-	createWindow(component)
-	
-	print time.time() - startTime
+	inputBox = Tkinter.Entry(root)
+	inputBox.pack()
+	inputBox.insert(0,"VIB3248")
+	inputBoxButton = Tkinter.Button(root,text="OPEN",command=lambda:createNewWindow(inputBox.get()))
+	inputBox.bind("<Return>",lambda e:createNewWindow(inputBox.get()))
+	inputBoxButton.pack()
 	
 	root.mainloop()
-	
-#n=main()
-#n=main("VIBRE016")
-#n=main("vcc1060")
-n=main("vib3248")
-#n=main("vib3365")
+
+if __name__ == "__main__":
+	main()
