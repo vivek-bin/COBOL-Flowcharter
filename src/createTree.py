@@ -18,6 +18,7 @@ class ProcessingUnit:
 		self.inputFile = []
 		self.paraCall = False
 		self.paraReturn = False
+		self.paraBranches = {}
 
 		if inputArg.__class__ is ProcessingUnit:
 			self.performReturnStack = inputArg.performReturnStack[:]
@@ -26,6 +27,7 @@ class ProcessingUnit:
 			self.processedLines = inputArg.processedLines[:]
 			self.programCounter = inputArg.programCounter - 0
 			self.inputFile = inputArg.inputFile
+			self.paraBranches = inputArg.paraBranches
 		
 		if inputArg.__class__ is pfc.ProgramProcessingFile:
 			self.inputFile = inputArg
@@ -174,24 +176,34 @@ def createChart(PU,ignorePeriod=False):
 				if "thru" in lineDict:
 					performEnd = lineDict["thru"]
 				
+				
 				if performStart in CONST.IGNOREDPARAS:
 					expandPara = False
 					tempObj = nodes.PerformNode(PU,performStart)
 					programObj.append(tempObj)
 					tempObj = False
-				else:
-					if performStart in PU.paraStack:
-						expandPara = False
-						tempObj = nodes.LoopBreakPointer(PU,performStart)
-						programObj.append(tempObj)
-						tempObj = False
-					else:
-						PU.pushStack(performStart,performEnd)
+				elif performStart in PU.paraStack:
+					expandPara = False
+					tempObj = nodes.LoopBreakPointer(PU,performStart)
+					programObj.append(tempObj)
+					tempObj = False
+				#else:
+				#	PU.pushStack(performStart,performEnd)
 			else:
 				ignorePeriodSub = False
 			
 			if expandPara:
-				subChart = createChart(PU,ignorePeriodSub)
+				if ignorePeriodSub:				#performing a PARA, so check if already created
+					dictKey = (performStart,performEnd)
+					if dictKey not in PU.paraBranches:
+						PU.pushStack(performStart,performEnd)
+						subChart = createChart(PU,ignorePeriodSub)
+						if not containsTypeNode(subChart,nodes.CallNode):
+							PU.paraBranches[dictKey] = subChart
+					else:
+						subChart = PU.paraBranches[dictKey]
+				else:
+					subChart = createChart(PU,ignorePeriodSub)
 				tempObj.branch = subChart
 				programObj.append(tempObj)
 				tempObj = False
@@ -359,6 +371,28 @@ def isTerminatedBranch(branch):
 		
 	if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch:
 		return isTerminatedBranch(node.branch)
+	
+def containsTypeNode(branch,typeNode):
+	for node in branch:
+		if node.__class__ is typeNode:
+			return True
+		
+		if node.__class__ is nodes.IfNode:
+			if containsTypeNode(node.branch[True].branch,typeNode):
+				return True
+			if containsTypeNode(node.branch[False].branch,typeNode):
+				return True
+
+		if node.__class__ is nodes.EvaluateNode:
+			for whenBranch in node.whenList:
+				if containsTypeNode(whenBranch.branch,typeNode):
+					return True
+		
+		if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch or node.__class__ is nodes.GoToBranch:
+			if containsTypeNode(node.branch,typeNode):
+				return True
+	
+	return False
 	
 def digestSentence(inputLine):
 	lineDict = {}

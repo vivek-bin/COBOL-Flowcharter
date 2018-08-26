@@ -207,6 +207,24 @@ def processingFileClean(inputFile):
 	
 	return file
 
+def processingFileCleanData(inputFile):
+	file = []
+	line = ""
+	for inputLine in inputFile:
+		if line:
+			line += " " + inputLine[CONST.ZEROPAD:].strip()
+		else:
+			line = inputLine
+			
+		if inputLine[-1] == ".":
+			file.append(line)
+			line = ""
+
+	if line:
+		file.append(line)
+	
+	return file
+
 def isCobolProgram(inputFile):
 	for inputLine in inputFile:
 		if len(inputLine) < 8:
