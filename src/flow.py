@@ -36,7 +36,7 @@ class ChartFrame(Tkinter.Frame):
 		self.pack(fill = Tkinter.BOTH, expand = 1)
 		#create canvas
 		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 600,state=Tkinter.NORMAL)
-		self.canvas.pack(side = Tkinter.LEFT, anchor = Tkinter.NW, expand=False, fill=Tkinter.BOTH, padx = 10, pady = 10)
+		self.canvas.pack(side = Tkinter.LEFT, anchor = Tkinter.NW, expand=True, fill=Tkinter.BOTH, padx = 10, pady = 10)
 		
 		#self.canvas.bind("<Enter>",self.canvasActive)
 		#self.bind_all("<MouseWheel>", self.mouseWheelScroll)
@@ -429,6 +429,7 @@ class ChartWindow(Tkinter.Toplevel):
 
 
 def createNewWindow(component):
+	component = component.upper()
 	if component in ChartWindow.charts:
 		ChartWindow.charts[component].focus_set()
 	else:
@@ -440,7 +441,7 @@ def main():
 	
 	inputBox = Tkinter.Entry(root)
 	inputBox.pack()
-	inputBox.insert(0,"VIB3248")
+	inputBox.insert(0,"vib3248")
 	inputBoxButton = Tkinter.Button(root,text="OPEN",command=lambda:createNewWindow(inputBox.get()))
 	inputBox.bind("<Return>",lambda e:createNewWindow(inputBox.get()))
 	inputBoxButton.pack()

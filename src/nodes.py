@@ -197,6 +197,10 @@ class CallNode(Node):
 		Node.__init__(self,PU)
 		self.moduleName = operand
 		self.moduleNameVariable = operand
+		self.dynamicCall = False
+	
+	def setCalledProgram(self,programName):
+		self.moduleName = programName
 	
 	def iconText(self):
 		return self.moduleName.upper()

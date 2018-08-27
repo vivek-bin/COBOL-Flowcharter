@@ -77,7 +77,7 @@ def processingFile(inputFile):
 			for i in range(7,len(inputLine)):
 				if inputLine[i] != " ":
 					break
-			inputLine = inputLine[:6] + " " + inputLine[7:i]+inputLine[i+1:]
+			inputLine = inputLine[:6] + " " + inputLine[7:i]+chr(255)+inputLine[i+1:]
 		if inputLine[6] != " ":
 			continue
 		if inputLine.replace(".","").strip() == "eject":
@@ -332,6 +332,7 @@ def writeAllProcessingExpand(start=0,end=999999):
 	print (time.time() - startTime)
 	
 	
-def t1(start=215,end=230):
-	writeAllProcessingExpand(start,end)
-	
+
+if __name__ == "__main__":
+	writeAllProcessingExpand()
+

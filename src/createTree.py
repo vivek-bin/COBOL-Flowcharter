@@ -131,7 +131,7 @@ def createChart(PU,ignorePeriod=False):
 		if "call" in lineDict:
 			calledProgram = getFieldValue(PU,lineDict["call"])
 			if calledProgram == "'dfhei1'":
-				if len(lineDict["using"])==1:
+				if len(lineDict["using"]) == 1:
 					lineDict["goback"] = True
 					calledProgram = ""
 				else:
@@ -140,7 +140,11 @@ def createChart(PU,ignorePeriod=False):
 			if calledProgram:
 				calledProgram = calledProgram[1:-1].strip().lower()
 				if calledProgram not in CONST.IGNOREDMODULES:
-					programObj.append(nodes.CallNode(PU,calledProgram))
+					tempObj = nodes.CallNode(PU,calledProgram)
+					if not isValue(lineDict["call"]) or lineDict["call"] == "'dfhei1'":
+						tempObj.dynamicCall = True
+					programObj.append(tempObj)
+					tempObj = False
 		
 		#returnable statements
 		if "goback" in lineDict:
@@ -198,7 +202,7 @@ def createChart(PU,ignorePeriod=False):
 					if dictKey not in PU.paraBranches:
 						PU.pushStack(performStart,performEnd)
 						subChart = createChart(PU,ignorePeriodSub)
-						if not containsTypeNode(subChart,nodes.CallNode):
+						if not containsDynamicCall(subChart):
 							PU.paraBranches[dictKey] = subChart
 					else:
 						subChart = PU.paraBranches[dictKey]
@@ -233,13 +237,13 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = nodes.IfNode(PU,lineDict["if"])
 			
 			subChart = createChart(PU)
-			
 			tempObj2 = nodes.IfBranch(PU,ifCondition)
 			tempObj2.branch = subChart
 			tempObj.branch[ifCondition] = tempObj2
 			
 			inputLine = PU.peekCurrentStatement()
 			lineDict = digestSentence(inputLine)
+			
 			while isTerminatedBranch(subChart) and ("." not in lineDict):
 				subChart = createChart(PU)
 				inputLine = PU.peekCurrentStatement()
@@ -306,13 +310,6 @@ def createChart(PU,ignorePeriod=False):
 	if tempObj:
 		programObj.append(tempObj)
 	
-	emptyFlag = True
-	for tempObj in programObj:
-		if not tempObj.isEmpty():
-			emptyFlag = False
-	#if emptyFlag:
-	#	programObj = []
-	
 	depthcount -= 1
 	#try:
 	#	fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
@@ -323,42 +320,50 @@ def createChart(PU,ignorePeriod=False):
 	return programObj
 	
 def getFieldValue(PU,field):
-	if field[0] in ["'",'"'] or field.replace(".","").isdigit():
-		return field
-	i=0
-	for lineNo in reversed(PU.processedLines):
-		i+=1
-		if i>500:
-			break
-		processedLine = PU.peekStatement(lineNo)
-		
-		if not processedLine.strip().startswith("move "):
-			continue
-		processedDict = digestSentence(processedLine)
-		if "move" in processedDict:
-			if field in processedDict["to"]:
-				i=0
-				field = processedDict["move"]
-				if field[0] in ["'",'"'] or field.replace(".","").isdigit():
-					break
-	#print i
+	if not isValue(field):
+		field = getMovedFieldValue(PU,field)
 	
 	#get initial value(string in quotes,number) if not MOVE'd
-	if field[0] in ["'",'"'] or field.replace(".","").isdigit():
-		pass
-	else:
-		field = " " + field + " "
-		
-		for inputLine in PU.inputFile.dataDivision:
-			if field in inputLine:
-				if " value " in inputLine:
-					valuePos = inputLine.find(" value ") + len(" value ")
-					field = inputLine[valuePos:-1]
-				break
-				
-		field = field.strip()
+	if not isValue(field):
+		field = getDefinedValue(PU,field)
 
 	return field
+	
+def getMovedFieldValue(PU,field):
+	if not isValue(field):
+		i=0
+		for lineNo in reversed(PU.processedLines):
+			i+=1
+			if i>500:
+				break
+			processedLine = PU.peekStatement(lineNo)
+			
+			if not processedLine.strip().startswith("move "):
+				continue
+			processedDict = digestSentence(processedLine)
+			if "move" in processedDict:
+				if field in processedDict["to"]:
+					i=0
+					field = processedDict["move"]
+					if isValue(field):
+						break
+
+	return field
+	
+def getDefinedValue(PU,field):		
+	field = " " + field + " "
+	for inputLine in PU.inputFile.dataDivision:
+		if field in inputLine:
+			if " value " in inputLine:
+				valuePos = inputLine.find(" value ") + len(" value ")
+				field = inputLine[valuePos:-1].strip()
+			break
+			
+	return field
+
+def isValue(field):
+	numericField = field.replace(".","").replace("-","").replace("+","")
+	return field[0] in ["'",'"'] or numericField.isdigit()
 	
 def isTerminatedBranch(branch):
 	if not branch:
@@ -372,24 +377,24 @@ def isTerminatedBranch(branch):
 	if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch:
 		return isTerminatedBranch(node.branch)
 	
-def containsTypeNode(branch,typeNode):
+def containsDynamicCall(branch):
 	for node in branch:
-		if node.__class__ is typeNode:
+		if node.__class__ is nodes.CallNode and node.dynamicCall:
 			return True
 		
 		if node.__class__ is nodes.IfNode:
-			if containsTypeNode(node.branch[True].branch,typeNode):
+			if containsDynamicCall(node.branch[True].branch):
 				return True
-			if containsTypeNode(node.branch[False].branch,typeNode):
+			if containsDynamicCall(node.branch[False].branch):
 				return True
 
 		if node.__class__ is nodes.EvaluateNode:
 			for whenBranch in node.whenList:
-				if containsTypeNode(whenBranch.branch,typeNode):
+				if containsDynamicCall(whenBranch.branch):
 					return True
 		
 		if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch or node.__class__ is nodes.GoToBranch:
-			if containsTypeNode(node.branch,typeNode):
+			if containsDynamicCall(node.branch):
 				return True
 	
 	return False
