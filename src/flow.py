@@ -425,7 +425,7 @@ class ChartWindow(Tkinter.Toplevel):
 		chartBox = (chartBox[0]-chartBorder,chartBox[1]-chartBorder,chartBox[2]+chartBorder,chartBox[3]+chartBorder)
 		self.chartFrame.canvas.configure(scrollregion = chartBox)
 		
-		print time.time() - startTime
+		print(time.time() - startTime)
 
 
 def createNewWindow(component):

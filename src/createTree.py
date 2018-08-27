@@ -352,12 +352,17 @@ def getMovedFieldValue(PU,field):
 	
 def getDefinedValue(PU,field):		
 	field = " " + field + " "
+	fieldFound = False
 	for inputLine in PU.inputFile.dataDivision:
 		if field in inputLine:
 			if " value " in inputLine:
 				valuePos = inputLine.find(" value ") + len(" value ")
 				field = inputLine[valuePos:-1].strip()
+				fieldFound = True
 			break
+	
+	if not fieldFound:
+		print("field not found: "+field)
 			
 	return field
 

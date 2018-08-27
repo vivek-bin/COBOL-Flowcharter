@@ -252,7 +252,7 @@ def writeProcessingExpand(componentName):
 	src = fileaccess.loadFile(fileaccess.SRCE,componentName)
 	if not isCobolProgram(src):
 		if componentName[2:4].lower() != "ms":
-			print ("not COBOL:" + componentName)
+			print("not COBOL:" + componentName)
 		fileaccess.writeFile(fileaccess.EXPANDED,componentName,src)
 		#fileaccess.writeFile(fileaccess.PROCESSING,componentName,src)
 	else:
@@ -329,7 +329,7 @@ def writeAllProcessingExpand(start=0,end=999999):
 	fileaccess.closeLib(fileaccess.PROCESSING)
 
 		
-	print (time.time() - startTime)
+	print(time.time() - startTime)
 	
 	
 

@@ -16,18 +16,18 @@ def t9(component="VIID246"):
 		if l.strip() == "exit.":
 			ln = log[i+1]
 			if ln[4] != " ":
-				print i 
+				print(i) 
 				break
 	
-	print (time.time() - startTime)
+	print(time.time() - startTime)
 	
 	
 class c1:
 	a=2
 	def __init__(self):
-		print self.a
+		print(self.a)
 		self.a+=3
-		print self.a
+		print(self.a)
 		
 class c2(c1):
 	a=22
@@ -37,18 +37,18 @@ class c2(c1):
 
 def t2():
 	b=c1()
-	print b.a
+	print(b.a)
 	b.a=4
-	print b.a
+	print(b.a)
 	
 	b=c2()
-	print b.a
+	print(b.a)
 	b.a=44
-	print b.a
+	print(b.a)
 	
 	b=c1()
-	print b.a
+	print(b.a)
 	b.a=4
-	print b.a
+	print(b.a)
 	
 t2()
