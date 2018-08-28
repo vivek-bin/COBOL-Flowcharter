@@ -27,7 +27,7 @@ class ProcessingUnit:
 			self.processedLines = inputArg.processedLines[:]
 			self.programCounter = inputArg.programCounter - 0
 			self.inputFile = inputArg.inputFile
-			self.paraBranches = inputArg.paraBranches
+			self.paraBranches = dict(inputArg.paraBranches)
 		
 		if inputArg.__class__ is pfc.ProgramProcessingFile:
 			self.inputFile = inputArg
