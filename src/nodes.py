@@ -162,9 +162,10 @@ class NonLoopBranch(Branch):
 	
 class PerformNode(Node):
 	iconName = "process"
-	def __init__(self,PU,operand):
+	def __init__(self,PU,operand,endingPara=False):
 		Node.__init__(self,PU)
 		self.para = operand
+		self.endingPara = endingPara
 		
 	def iconText(self):
 		return self.para.upper()

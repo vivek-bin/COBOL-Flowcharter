@@ -53,13 +53,6 @@ class ChartFrame(Tkinter.Frame):
 		self.scrollbarV.config(command=self.canvas.yview)
 		self.scrollbarH.config(command=self.canvas.xview)
 		
-		
-	def canvasUnactive(self,event):
-		self.canvas.unbind_all("<MouseWheel>")
-		
-	def canvasActive(self,event):
-		self.canvas.bind_all("<MouseWheel>", self.mouseWheelScroll)
-		
 	def zoom(self, key):
 		redrawFlag = False
 		zoomAmount = 1.0
@@ -234,15 +227,14 @@ class ChartWindow(Tkinter.Toplevel):
 		
 		self.chartFrame  = False
 		self.component = component
-		self.createWindow(component)
+		self.createWindow()
 		self.protocol("WM_DELETE_WINDOW", self.eraseChart)
 		
-		#self.bind("<Enter>",self.activeWindow)
-		#self.bind_all("<MouseWheel>", self.mouseWheelScroll)
-		#self.bind("<Leave>",self.UnactiveWindow)
+		#self.bind("<Enter>",self.chartActive)
+		#self.bind("<Leave>",self.chartUnactive)
 		
-		self.chartFrame.bind("<MouseWheel>",self.chartFrame.mouseWheelScroll)
-		
+		self.bind("<MouseWheel>",self.chartFrame.mouseWheelScroll)
+	
 	def eraseChart(self):
 		del ChartWindow.charts[self.component]
 		self.destroy()
@@ -406,10 +398,10 @@ class ChartWindow(Tkinter.Toplevel):
 		else:
 			return False
 	
-	def createWindow(self,component):
+	def createWindow(self):
 		startTime = time.time()
 		
-		nodes = createTree.getChart(component)
+		nodes = createTree.getChart(self.component)
 		if not nodes:
 			return
 		
@@ -441,7 +433,7 @@ def main():
 	
 	inputBox = Tkinter.Entry(root)
 	inputBox.pack()
-	inputBox.insert(0,"vib3248")
+	inputBox.insert(0,"viid246")
 	inputBoxButton = Tkinter.Button(root,text="OPEN",command=lambda:createNewWindow(inputBox.get()))
 	inputBox.bind("<Return>",lambda e:createNewWindow(inputBox.get()))
 	inputBoxButton.pack()

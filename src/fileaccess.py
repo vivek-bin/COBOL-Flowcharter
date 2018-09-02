@@ -11,47 +11,46 @@ EXPANDED = 3
 PROCESSING = 4
 TREES = 5
 
-zips = [False,False,False,False,False,False]
-zipPaths = [False,False,False,False,False,False]
-filePaths = [False,False,False,False,False,False]
+ZIPPATHS = {}
+ZIPPATHS[SRCE] = CONST.SRCEZIP
+ZIPPATHS[COPY] = CONST.COPYZIP
+ZIPPATHS[INC] = CONST.INCZIP
+ZIPPATHS[EXPANDED] = CONST.EXPANDEDZIP
+ZIPPATHS[PROCESSING] = CONST.PROCESSINGZIP
+ZIPPATHS[TREES] = CONST.TREESZIP
 
-#zips[SRCE] = zips[COPY] = zips[INC] = zips[EXPANDED] = zips[PROCESSING] = zips[TREES] = False
-zipPaths[SRCE] = CONST.SRCEZIP
-zipPaths[COPY] = CONST.COPYZIP
-zipPaths[INC] = CONST.INCZIP
-zipPaths[EXPANDED] = CONST.EXPANDEDZIP
-zipPaths[PROCESSING] = CONST.PROCESSINGZIP
-zipPaths[TREES] = CONST.TREESZIP
+FILENAMEPREFIX = {}
+FILENAMEPREFIX[SRCE] = "MTP.CCCV000.SRCELIB."
+FILENAMEPREFIX[COPY] = "MTP.CCCV000.COPYLIB."
+FILENAMEPREFIX[INC] = "MTP.CCCV000.INCLUDE."
+FILENAMEPREFIX[EXPANDED] = "MTP.CCCV000.EXPANDED."
+FILENAMEPREFIX[PROCESSING] = "MTP.CCCV000.PROCESSING."
+FILENAMEPREFIX[TREES] = "MTP.CCCV000.TREES."
 
-filePaths[SRCE] = "MTP.CCCV000.SRCELIB."
-filePaths[COPY] = "MTP.CCCV000.COPYLIB."
-filePaths[INC] = "MTP.CCCV000.INCLUDE."
-filePaths[EXPANDED] = "MTP.CCCV000.EXPANDED."
-filePaths[PROCESSING] = "MTP.CCCV000.PROCESSING."
-filePaths[TREES] = "MTP.CCCV000.TREES."
+zips = {}
 
 def openLib(lib,mode="r"):
 	if mode in ["w","a"]:
-		zips[lib] = zipfile.ZipFile(zipPaths[lib],mode,zipfile.ZIP_DEFLATED)
+		zips[lib] = zipfile.ZipFile(ZIPPATHS[lib],mode,zipfile.ZIP_DEFLATED)
 	else:
-		zips[lib] = zipfile.ZipFile(zipPaths[lib],mode)
+		zips[lib] = zipfile.ZipFile(ZIPPATHS[lib],mode)
 	
 def fileListLib(lib):
 	fileList = zips[lib].namelist()
-	fileList = [fileName[len(filePaths[lib]):] for fileName in fileList]
+	fileList = [fileName[len(FILENAMEPREFIX[lib]):] for fileName in fileList]
 	return fileList
 	
 def extractExpandedFile(fileName):
-	fileName = filePaths[EXPANDED] + fileName.upper()
+	fileName = FILENAMEPREFIX[EXPANDED] + fileName.upper()
 	if not os.path.isfile(CONST.EXPANDED + fileName):
-		zips[EXPANDED] = zipfile.ZipFile(zipPaths[EXPANDED])
+		zips[EXPANDED] = zipfile.ZipFile(ZIPPATHS[EXPANDED])
 		zips[EXPANDED].extract(fileName, CONST.EXPANDED)
 		zips[EXPANDED].close()
 	return CONST.EXPANDED + fileName
 	
 def loadFile(lib,fileName):
 	try:
-		f = zips[lib].read(filePaths[lib]+fileName.upper())
+		f = zips[lib].read(FILENAMEPREFIX[lib]+fileName.upper())
 		f = f.split("\r\n")
 	except KeyError:
 		f = []
@@ -63,7 +62,7 @@ def loadFile(lib,fileName):
 	return f
 	
 def writeFile(lib,fileName,file):
-	zips[lib].writestr(filePaths[lib]+fileName,"\r\n".join(file))
+	zips[lib].writestr(FILENAMEPREFIX[lib]+fileName,"\r\n".join(file))
 
 def closeLib(lib):
 	zips[lib].close()
@@ -107,12 +106,12 @@ def writeLOG(inputLine):
 
 
 def writePickle(outputFileName,file):
-	outputFile = open(CONST.TREES+filePaths[TREES]+outputFileName,"wb")
+	outputFile = open(CONST.TREES+FILENAMEPREFIX[TREES]+outputFileName,"wb")
 	pickle.dump(file,outputFile)
 	outputFile.close()
 	
 def loadPickle(outputFileName):
-	outputFile = open(CONST.TREES+filePaths[TREES]+outputFileName,"rb")
+	outputFile = open(CONST.TREES+FILENAMEPREFIX[TREES]+outputFileName,"rb")
 	file = pickle.load(outputFile)
 	outputFile.close()
 	return file
