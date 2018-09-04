@@ -93,8 +93,8 @@ def createChart(PU,ignorePeriod=False):
 		lineDict = digestSentence(inputLine)
 	#	fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
 		if PU.paraReturn:
-			break		
-		
+			break
+			
 		#exec nodes
 		if "exec" in lineDict:
 			execBlock = [inputLine]

@@ -29,6 +29,8 @@ FILENAMEPREFIX[TREES] = "MTP.CCCV000.TREES."
 
 zips = {}
 
+LINEBREAK = "\r\n"
+
 def openLib(lib,mode="r"):
 	if mode in ["w","a"]:
 		zips[lib] = zipfile.ZipFile(ZIPPATHS[lib],mode,zipfile.ZIP_DEFLATED)
@@ -51,7 +53,7 @@ def extractExpandedFile(fileName):
 def loadFile(lib,fileName):
 	try:
 		f = zips[lib].read(FILENAMEPREFIX[lib]+fileName.upper())
-		f = f.split("\r\n")
+		f = f.split(LINEBREAK)
 	except KeyError:
 		f = []
 		
@@ -62,7 +64,7 @@ def loadFile(lib,fileName):
 	return f
 	
 def writeFile(lib,fileName,file):
-	zips[lib].writestr(FILENAMEPREFIX[lib]+fileName,"\r\n".join(file))
+	zips[lib].writestr(FILENAMEPREFIX[lib]+fileName,LINEBREAK.join(file))
 
 def closeLib(lib):
 	zips[lib].close()

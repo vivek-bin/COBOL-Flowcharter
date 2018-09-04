@@ -1,7 +1,6 @@
 import constants as CONST
 import os
 import subprocess
-import Tkinter
 import nodes
 import createTree
 import fileaccess
@@ -9,6 +8,10 @@ import textwrap
 import sys
 import inspect
 import time
+try:
+	import Tkinter
+except ImportError:
+	import tkinter as Tkinter
 from PIL import Image,ImageTk
 
 
