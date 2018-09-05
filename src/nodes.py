@@ -62,7 +62,7 @@ class Branch(Node):
 			if tempWidth > w:
 				w = tempWidth
 		if w:
-			return w + CONST.BRANCHSPACE*CONST.ZOOM/2
+			return w + CONST.BRANCHSPACE/2
 		else:
 			return w
 			
@@ -122,9 +122,12 @@ class EvaluateNode(Node):
 	def width(self):
 		finalWidth = 0
 		for whenBranch in self.whenList:
-			finalWidth += whenBranch.width() + CONST.BRANCHSPACE*CONST.ZOOM
-			
-		return finalWidth
+			finalWidth += whenBranch.width()
+		
+		if Node.width(self) > finalWidth:
+			return Node.width(self)
+		else:
+			return finalWidth
 		
 	def description(self):
 		return "EVALUATE " + self.condition.upper()
@@ -151,7 +154,7 @@ class LoopBranch(Branch):
 		self.condition = operand
 		
 	def width(self):
-		return Branch.width(self) + CONST.BRANCHSPACE*CONST.ZOOM
+		return Branch.width(self) + CONST.BRANCHSPACE
 		
 	def description(self):
 		return self.condition.upper()

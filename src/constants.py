@@ -31,8 +31,6 @@ TOOLTIPSIZE = 50
 
 NPLOCATION = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
-
-ZOOM = 1
 BRANCHSPACE = 30
 
 FONT = ("League Gothic",9,"bold")

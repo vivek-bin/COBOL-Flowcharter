@@ -168,8 +168,8 @@ def createChart(PU,ignorePeriod=False):
 			if ifCondition:
 				tempObj = nodes.IfNode(PU,lineDict["if"])
 			
-			subChart = createChart(PU)
 			tempObj2 = nodes.IfBranch(PU,ifCondition)
+			subChart = createChart(PU)
 			tempObj2.branch = subChart
 			tempObj.branch[ifCondition] = tempObj2
 			

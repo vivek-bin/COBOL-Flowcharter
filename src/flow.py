@@ -109,8 +109,6 @@ class ChartFrame(Tkinter.Frame):
 			for state in ["idle","hover","click"]:
 				imgName = iType + "-" + state
 				img = Image.open(CONST.ICONS + imgName +".png")
-				imgResize = (int(i*CONST.ZOOM) for i in img.size)
-				img = img.resize(imgResize, Image.ANTIALIAS)
 				self.iconImages[imgName] = img
 				self.icons[imgName] = ImageTk.PhotoImage(img)
 		
@@ -439,7 +437,7 @@ def main():
 	
 	inputBox = Tkinter.Entry(root)
 	inputBox.pack()
-	inputBox.insert(0,"viid246")
+	inputBox.insert(0,"viid435")
 	inputBoxButton = Tkinter.Button(root,text="OPEN",command=lambda:createNewWindow(inputBox.get()))
 	inputBox.bind("<Return>",lambda e:createNewWindow(inputBox.get()))
 	inputBoxButton.pack()
