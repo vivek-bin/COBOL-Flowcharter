@@ -29,18 +29,28 @@ FILENAMEPREFIX[TREES] = "MTP.CCCV000.TREES."
 
 zips = {}
 
-LINEBREAK = "\r\n"
-
 def openLib(lib,mode="r"):
-	if mode in ["w","a"]:
-		zips[lib] = zipfile.ZipFile(ZIPPATHS[lib],mode,zipfile.ZIP_DEFLATED)
+	if lib not in zips.keys():
+		if mode in ["w","a"]:
+			zips[lib] = zipfile.ZipFile(ZIPPATHS[lib],mode,zipfile.ZIP_DEFLATED)
+		else:
+			zips[lib] = zipfile.ZipFile(ZIPPATHS[lib],mode)
 	else:
-		zips[lib] = zipfile.ZipFile(ZIPPATHS[lib],mode)
+		print("library already open")
 	
 def fileListLib(lib):
 	fileList = zips[lib].namelist()
 	fileList = [fileName[len(FILENAMEPREFIX[lib]):] for fileName in fileList]
 	return fileList
+	
+def validComponentName(component):
+	component = FILENAMEPREFIX[EXPANDED] + component.upper()
+	
+	e = zipfile.ZipFile(CONST.EXPANDEDZIP)
+	exists = component  in e.namelist()
+	e.close()
+	
+	return exists
 	
 def extractExpandedFile(fileName):
 	fileName = FILENAMEPREFIX[EXPANDED] + fileName.upper()
@@ -53,7 +63,9 @@ def extractExpandedFile(fileName):
 def loadFile(lib,fileName):
 	try:
 		f = zips[lib].read(FILENAMEPREFIX[lib]+fileName.upper())
-		f = f.split(LINEBREAK)
+		f = f.decode("cp852")
+		
+		f = f.split("\r\n")
 	except KeyError:
 		f = []
 		
@@ -64,10 +76,11 @@ def loadFile(lib,fileName):
 	return f
 	
 def writeFile(lib,fileName,file):
-	zips[lib].writestr(FILENAMEPREFIX[lib]+fileName,LINEBREAK.join(file))
+	zips[lib].writestr(FILENAMEPREFIX[lib]+fileName,"\r\n".join(file))
 
 def closeLib(lib):
 	zips[lib].close()
+	del zips[lib]
 
 	
 	

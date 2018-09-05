@@ -93,15 +93,17 @@ class ChartFrame(Tkinter.Frame):
 			self.canvas.configure(scrollregion = chartBox)
 		
 	def mouseWheelScroll(self, event):
-		scroll = -1 * event.delta / 120
-		if event.state == 0:
-			self.canvas.yview_scroll(scroll, "units")
-		if event.state == 4:
+		scroll = -1 * int(event.delta / 120)
+		ctrlPressed = event.state & (1 << 2)
+		
+		if ctrlPressed:
 			if scroll < 0:
 				self.zoom("+")
 			else:
 				self.zoom("-")
-			
+		else:
+			self.canvas.yview_scroll(scroll, "units")
+	
 	def loadIcons(self):
 		for iType in ["branch","db","file","info","module","process","start","loop"]:
 			for state in ["idle","hover","click"]:
@@ -226,20 +228,20 @@ class ChartFrame(Tkinter.Frame):
 class ChartWindow(Tkinter.Toplevel):
 	charts = {}
 	def __init__(self,component):
+		Tkinter.Toplevel.__init__(self)
 		component = component.upper()
 		
 		self.chartFrame  = False
 		self.component = component
-		self.createWindow()
 		self.protocol("WM_DELETE_WINDOW", self.eraseChart)
 		
-		#self.bind("<Enter>",self.chartActive)
-		#self.bind("<Leave>",self.chartUnactive)
-		
-		self.bind("<MouseWheel>",self.chartFrame.mouseWheelScroll)
+		self.createWindow()
 	
 	def eraseChart(self):
-		del ChartWindow.charts[self.component]
+		try:
+			del ChartWindow.charts[self.component]
+		except KeyError:
+			pass
 		self.destroy()
 	
 	def drawFlowChart(self,nodeList,curX,curY):
@@ -405,10 +407,7 @@ class ChartWindow(Tkinter.Toplevel):
 		startTime = time.time()
 		
 		nodes = createTree.getChart(self.component)
-		if not nodes:
-			return
-		
-		Tkinter.Toplevel.__init__(self)
+
 		RWidth = int(self.winfo_screenwidth()*0.5)
 		RHeight = int(self.winfo_screenheight()*0.95)
 		self.geometry(("%dx%d")%(RWidth,RHeight))
@@ -420,17 +419,21 @@ class ChartWindow(Tkinter.Toplevel):
 		chartBox = (chartBox[0]-chartBorder,chartBox[1]-chartBorder,chartBox[2]+chartBorder,chartBox[3]+chartBorder)
 		self.chartFrame.canvas.configure(scrollregion = chartBox)
 		
+		self.bind("<MouseWheel>",self.chartFrame.mouseWheelScroll)
+		
 		print(time.time() - startTime)
 
 
 def createNewWindow(component):
 	component = component.upper()
-	if component in ChartWindow.charts:
-		ChartWindow.charts[component].focus_set()
-	else:
-		ChartWindow.charts[component] = ChartWindow(component)
-		
-		
+	if fileaccess.validComponentName(component):
+		if component in ChartWindow.charts:
+			ChartWindow.charts[component].focus_set()
+		else:
+			ChartWindow.charts[component] = ChartWindow(component)
+	
+	
+	
 def main():
 	root = Tkinter.Tk()
 	
