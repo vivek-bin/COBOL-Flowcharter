@@ -45,13 +45,12 @@ def loadCustomization(inputFileName):
 	try:
 		iFile = open(FLOWCUSTOM+inputFileName+".txt")
 
-		f = [l.rstrip() for l in iFile]
+		f = [l.strip().lower() for l in iFile]
 		iFile.close()
 	except IOError:
 		f = []
 	return f
 
 IGNOREDMODULES = loadCustomization("ignore-program")
-IGNOREDMODULES = [i.strip().lower() for i in IGNOREDMODULES]
 IGNOREDPARAS = loadCustomization("ignore-para")
-IGNOREDPARAS = [i.strip().lower() for i in IGNOREDPARAS]
+

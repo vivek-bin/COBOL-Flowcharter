@@ -15,15 +15,17 @@ def createChart(PU,ignorePeriod=False):
 	global depthcount
 	lineCount = 0
 	depthcount += 1
-	#try:
-	#	fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	#except IndexError:
-	#	fileaccess.writeLOG("start:index error")
+	if depthcount <4:
+		try:
+			fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+		except IndexError:
+			fileaccess.writeLOG("start:index error")
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-	#	fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
+		if depthcount <4:
+			fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
 		if PU.paraReturn:
 			break
 			
@@ -105,6 +107,7 @@ def createChart(PU,ignorePeriod=False):
 				tempObj = nodes.NonLoopBranch(PU)
 			
 			expandPara = True
+			includePara = True
 			if lineDict["perform"] is not True:
 				ignorePeriodSub = True
 				performEnd = performStart = lineDict["perform"]
@@ -112,19 +115,13 @@ def createChart(PU,ignorePeriod=False):
 				if "thru" in lineDict:
 					performEnd = lineDict["thru"]
 				
-				
-				if performStart in CONST.IGNOREDPARAS:
+				if performStart in PU.paraStack:
 					expandPara = False
-					tempObj = nodes.PerformNode(PU,performStart)
-					programObj.append(tempObj)
-					tempObj = False
-				elif performStart in PU.paraStack:
-					expandPara = False
-					tempObj = nodes.LoopBreakPointer(PU,performStart)
-					programObj.append(tempObj)
-					tempObj = False
-				#else:
-				#	PU.pushStack(performStart,performEnd)
+					programObj.append(nodes.LoopBreakPointer(PU,performStart))
+				elif performStart in CONST.IGNOREDPARAS:
+					includePara = False
+					programObj.append(nodes.PerformNode(PU,performStart))
+					
 			else:
 				ignorePeriodSub = False
 			
@@ -132,6 +129,9 @@ def createChart(PU,ignorePeriod=False):
 				if ignorePeriodSub:				#performing a PARA, so check if already created
 					dictKey = (performStart,performEnd)
 					if dictKey not in PU.paraBranches:
+					
+						if depthcount <4:
+							fileaccess.writeLOG(str(dictKey))
 						PU.pushStack(performStart,performEnd)
 						subChart = createChart(PU,ignorePeriodSub)
 						if not containsDynamicCall(subChart):
@@ -140,15 +140,20 @@ def createChart(PU,ignorePeriod=False):
 						subChart = PU.paraBranches[dictKey]
 				else:
 					subChart = createChart(PU,ignorePeriodSub)
-				tempObj.branch = subChart
-				programObj.append(tempObj)
+					
+				if includePara:
+					tempObj.branch = subChart
+					programObj.append(tempObj)
 				tempObj = False
 				
 				if isTerminatedBranch(subChart):
+					if not includePara:
+						programObj.append(nodes.EndNode(PU,performStart))
+					
 					while isTerminatedBranch(subChart):
 						subChart = createChart(PU,ignorePeriodSub)
 					break
-				
+					
 				inputLine = PU.peekCurrentStatement()
 				lineDict = digestSentence(inputLine)
 			
@@ -243,10 +248,12 @@ def createChart(PU,ignorePeriod=False):
 		programObj.append(tempObj)
 	
 	depthcount -= 1
-	#try:
-	#	fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-	#except IndexError:
-	#	fileaccess.writeLOG("end:index error")
+	
+	if depthcount <4:
+		try:
+			fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+		except IndexError:
+			fileaccess.writeLOG("end:index error")
 	
 	
 	return programObj
@@ -517,11 +524,36 @@ def getChart(component):
 	#file = fileaccess.loadDATA("test")
 	if file:
 		PU, fChart = generateChart(file)
-		
-	#fileaccess.writePickle(component,fChart)
-	#f2 = fileaccess.loadPickle(component)
+	#	fileaccess.writePickle(component,fChart)
+	#fChart = fileaccess.loadPickle(component)
 	
 	fileaccess.closeLib(fileaccess.PROCESSING)
 	
 	return fChart
+	
+	
+def writeAllCharts(start=0,end=99):
+	startTime = time.time()
+	
+	fileaccess.openLib(fileaccess.PROCESSING)
+	
+	l = fileaccess.fileListLib(fileaccess.PROCESSING)
+	processingList = l[start:end]
+	
+	for fileName in processingList:
+		print(fileName)
+		src = fileaccess.loadFile(fileaccess.PROCESSING,fileName)
+		PU, fChart = generateChart(src)
+		fileaccess.writePickle(fileName,fChart)
+	
+	fileaccess.closeLib(fileaccess.PROCESSING)
+
+
+	print(time.time() - startTime)
+
+
+if __name__ == "__main__":
+	writeAllCharts()
+
+	
 	

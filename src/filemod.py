@@ -1,6 +1,8 @@
 import constants as CONST
 import keywords
 import fileaccess
+import os
+import time
 
 def expandFile(inputFile):
 	file = []
@@ -306,8 +308,6 @@ def getIncludedCopybooks(inputFile):
 	return file
 	
 def writeAllProcessingExpand(start=0,end=999999):
-	import os
-	import time
 	startTime = time.time()
 	
 	fileaccess.openLib(fileaccess.SRCE)
@@ -316,8 +316,8 @@ def writeAllProcessingExpand(start=0,end=999999):
 	fileaccess.openLib(fileaccess.EXPANDED,"w")
 	fileaccess.openLib(fileaccess.PROCESSING,"w")
 	
-	list = fileaccess.fileListLib(fileaccess.SRCE)
-	processingList = list[start:end]
+	l = fileaccess.fileListLib(fileaccess.SRCE)
+	processingList = l[start:end]
 	
 	for fileName in processingList:
 		writeProcessingExpand(fileName)

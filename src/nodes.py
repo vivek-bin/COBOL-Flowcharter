@@ -8,6 +8,7 @@ class Node:
 		self.paraStack = PU.paraStack[:]
 		self.lineNo = int(PU.inputFile.procedureDivisionLineNo[PU.processedLines[-1]]) + 1
 		self.empty = False
+		self.tags = ["ButtonIcon","JumpToLine","HasDetails"]
 	
 	def idleIcon(self):
 		if self.iconName:
@@ -167,6 +168,7 @@ class PerformNode(Node):
 	iconName = "process"
 	def __init__(self,PU,operand,endingPara=False):
 		Node.__init__(self,PU)
+		self.empty = True
 		self.para = operand
 		self.endingPara = endingPara
 		
@@ -199,6 +201,7 @@ class CallNode(Node):
 	iconName = "module"
 	def __init__(self,PU,operand):
 		Node.__init__(self,PU)
+		self.tags.append("CalledProgram")
 		self.moduleName = operand
 		self.moduleNameVariable = operand
 		self.dynamicCall = False

@@ -35,15 +35,11 @@ class ChartFrame(Tkinter.Frame):
 		self.scrollbarH.pack(side=Tkinter.BOTTOM, fill=Tkinter.X)
 		
 		self.parent.title(self.component.upper())
-		self.config(bg = '#F0F0F0')
+		self.config(bg = "#F0F0F0")
 		self.pack(fill = Tkinter.BOTH, expand = 1)
 		#create canvas
 		self.canvas = Tkinter.Canvas(self, relief = Tkinter.FLAT, background = "#D2D2D2",width = 800, height = 600,state=Tkinter.NORMAL)
 		self.canvas.pack(side = Tkinter.LEFT, anchor = Tkinter.NW, expand=True, fill=Tkinter.BOTH, padx = 10, pady = 10)
-		
-		#self.canvas.bind("<Enter>",self.canvasActive)
-		#self.bind_all("<MouseWheel>", self.mouseWheelScroll)
-		#self.canvas.bind("<Leave>",self.canvasUnactive)
 		
 		self.canvas.tag_bind("ButtonIcon", "<ButtonPress-1>", self.setPressedIcon)
 		self.canvas.tag_bind("ButtonIcon", "<ButtonRelease-1>", self.resetPressedIcon)
@@ -120,10 +116,7 @@ class ChartFrame(Tkinter.Frame):
 				nodeClass.iconHeight = self.icons[nodeClass.iconName+"-"+state].height()
 	
 	def newBlock(self,node,x,y):
-		tags = ("ButtonIcon","JumpToLine","HasDetails")
-		if node.__class__ is nodes.CallNode:
-			tags = tags + ("CalledProgram",)
-		objId = self.canvas.create_image(x,y,image=self.icons[node.idleIcon()],activeimage=self.icons[node.hoverIcon()],tags=tags)
+		objId = self.canvas.create_image(x,y,image=self.icons[node.idleIcon()],activeimage=self.icons[node.hoverIcon()],tags=node.tags)
 		textId = self.canvas.create_text(x,y,text=node.iconText(),font=CONST.FONT,fill="#000000",state=Tkinter.DISABLED,tags="ButtonText")
 		
 		self.nodeDict[objId] = node
@@ -437,7 +430,7 @@ def main():
 	
 	inputBox = Tkinter.Entry(root)
 	inputBox.pack()
-	inputBox.insert(0,"viid435")
+	inputBox.insert(0,"vib3248")
 	inputBoxButton = Tkinter.Button(root,text="OPEN",command=lambda:createNewWindow(inputBox.get()))
 	inputBox.bind("<Return>",lambda e:createNewWindow(inputBox.get()))
 	inputBoxButton.pack()
