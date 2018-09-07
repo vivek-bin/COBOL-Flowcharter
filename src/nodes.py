@@ -59,6 +59,8 @@ class Branch(Node):
 	def width(self):
 		w = self.iconWidth
 		for n in self.branch:
+			if n.isEmpty():
+				continue
 			tempWidth = n.width()
 			if tempWidth > w:
 				w = tempWidth

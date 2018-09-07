@@ -244,8 +244,6 @@ class ChartWindow(Tkinter.Toplevel):
 			currentHeight = node.height()
 			joiningLineLength = prevHeight + currentHeight
 			
-			if node.__class__ is nodes.ParaNode:
-				pass#continue
 			if node.isEmpty():
 				continue
 			

@@ -15,20 +15,22 @@ def createChart(PU,ignorePeriod=False):
 	global depthcount
 	lineCount = 0
 	depthcount += 1
-	if depthcount <4:
-		try:
-			fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-		except IndexError:
-			fileaccess.writeLOG("start:index error")
+	#try:
+	#	fileaccess.writeLOG("start:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	#except IndexError:
+	#	fileaccess.writeLOG("start:index error")
 	
 	while True:
 		inputLine = PU.getNextStatement()
 		lineDict = digestSentence(inputLine)
-		if depthcount <4:
-			fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
+	#	fileaccess.writeLOG(str(PU.processedLines[-1]).ljust(8) + "    " + str(inputLine))
 		if PU.paraReturn:
 			break
 			
+		#;)
+		#if depthcount > 15:
+		#	break
+		
 		#exec nodes
 		if "exec" in lineDict:
 			execBlock = [inputLine]
@@ -108,10 +110,9 @@ def createChart(PU,ignorePeriod=False):
 			
 			expandPara = True
 			includePara = True
+			ignorePeriodSub = True
 			if lineDict["perform"] is not True:
-				ignorePeriodSub = True
 				performEnd = performStart = lineDict["perform"]
-
 				if "thru" in lineDict:
 					performEnd = lineDict["thru"]
 				
@@ -122,21 +123,20 @@ def createChart(PU,ignorePeriod=False):
 					includePara = False
 					programObj.append(nodes.PerformNode(PU,performStart))
 					
-			else:
+			else:				#inline perform
 				ignorePeriodSub = False
 			
 			if expandPara:
+				fastforwardRequired = True
 				if ignorePeriodSub:				#performing a PARA, so check if already created
 					dictKey = (performStart,performEnd)
 					if dictKey not in PU.paraBranches:
-					
-						if depthcount <4:
-							fileaccess.writeLOG(str(dictKey))
 						PU.pushStack(performStart,performEnd)
 						subChart = createChart(PU,ignorePeriodSub)
 						if not containsDynamicCall(subChart):
 							PU.paraBranches[dictKey] = subChart
 					else:
+						fastforwardRequired = False
 						subChart = PU.paraBranches[dictKey]
 				else:
 					subChart = createChart(PU,ignorePeriodSub)
@@ -146,12 +146,15 @@ def createChart(PU,ignorePeriod=False):
 					programObj.append(tempObj)
 				tempObj = False
 				
-				if isTerminatedBranch(subChart):
-					if not includePara:
-						programObj.append(nodes.EndNode(PU,performStart))
-					
+				if not includePara:
+					if isTerminatedBranch(subChart):
+						programObj.append(isTerminatedBranch(subChart))
+				
+				if fastforwardRequired:
 					while isTerminatedBranch(subChart):
 						subChart = createChart(PU,ignorePeriodSub)
+					
+				if isTerminatedBranch(programObj):
 					break
 					
 				inputLine = PU.peekCurrentStatement()
@@ -249,11 +252,10 @@ def createChart(PU,ignorePeriod=False):
 	
 	depthcount -= 1
 	
-	if depthcount <4:
-		try:
-			fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
-		except IndexError:
-			fileaccess.writeLOG("end:index error")
+	#try:
+	#	fileaccess.writeLOG("end:" + str(depthcount)+ "      " + str(PU.processedLines[-1])+ "      " + str(PU.inputFile.procedureDivision[PU.processedLines[-1]]))
+	#except IndexError:
+	#	fileaccess.writeLOG("end:index error")
 	
 	
 	return programObj
@@ -316,7 +318,7 @@ def isTerminatedBranch(branch):
 	node = branch[-1]
 	
 	if node.__class__ is nodes.GoToBranch or node.__class__ is nodes.EndNode:
-		return True
+		return node
 		
 	if node.__class__ is nodes.LoopBranch or node.__class__ is nodes.NonLoopBranch:
 		return isTerminatedBranch(node.branch)
@@ -530,7 +532,6 @@ def getChart(component):
 	fileaccess.closeLib(fileaccess.PROCESSING)
 	
 	return fChart
-	
 	
 def writeAllCharts(start=0,end=99):
 	startTime = time.time()

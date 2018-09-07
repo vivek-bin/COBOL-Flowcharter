@@ -1,18 +1,16 @@
 generating tree
-- handle/test go to's
-- aib018y	- too big		- now takes about 5mins, but is generated atleast
+- handle wrong go to's which break programs
 - exec cics return/call/tsq etcetc
 - find values from non-trivial data structures
 		- AUTO batch, program npiobat not found
 
-generating flowchart
+drawing flowchart
 - loopbreakpointer, goto
 		- jump to para instead of line joining the two as itll be messy
-- program calls to be ignored/para's not to be expanded
-		- check if ending para
 - go to:
 		p1.
 		....
 		p2.
 		go to p1.
 - search?
+
