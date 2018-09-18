@@ -86,12 +86,26 @@ def createChart(PU,ignorePeriod=False):
 		if "goback" in lineDict:
 			programObj.append(nodes.EndNode(PU,lineDict["goback"]))
 		if "go to" in lineDict:
-			tempObj = nodes.GoToBranch(PU,lineDict["go to"])
-			if lineDict["go to"] not in (PU.paraStack + PU.performEndStack):
-				goToPU = ProcessingUnit(PU)
-				goToPU.jumpToPara(lineDict["go to"])
-			#	subChart = createChart(goToPU,True)
-			#	tempObj.branch = subChart
+			if "depending" in lineDict:
+				tempObj = nodes.EvaluateNode(PU,lineDict["depending"])
+				tempObj.whenList.append(nodes.WhenBranch(PU,"other"))
+				for i,goToPara in enumerate(lineDict["go to"]):
+					tempObj2 = nodes.WhenBranch(PU,str(i+1))
+					tempObj3 = nodes.GoToBranch(PU,goToPara)
+					if goToPara not in (PU.paraStack + PU.performEndStack):
+						goToPU = ProcessingUnit(PU)
+						goToPU.jumpToPara(goToPara)
+					#	subChart = createChart(goToPU,True)
+					#	tempObj3.branch = subChart
+					tempObj2.branch.append(tempObj3)
+					tempObj.whenList.append(tempObj2)
+			else:
+				tempObj = nodes.GoToBranch(PU,lineDict["go to"])
+				if lineDict["go to"] not in (PU.paraStack + PU.performEndStack):
+					goToPU = ProcessingUnit(PU)
+					goToPU.jumpToPara(lineDict["go to"])
+				#	subChart = createChart(goToPU,True)
+				#	tempObj.branch = subChart
 			programObj.append(tempObj)
 			tempObj = False
 			
@@ -395,7 +409,12 @@ def digestSentence(inputLine):
 			lineDict[lineDict[0]] = words[2]
 	
 	if words[0] == "go" and words[1] == "to":
-		lineDict["go to"] = words[2]
+		if "depending" in words:
+			dependingPos = words.index("depending")
+			lineDict["go to"] = words[2:dependingPos]
+			lineDict["depending"] = words[-1]
+		else:
+			lineDict["go to"] = words[2]
 	
 	if "call" in lineDict:
 		lineDict["call"] = words[1]
@@ -456,8 +475,9 @@ def digestSentence(inputLine):
 	
 	for word in ["end-if","end-evaluate","end-perform","end-search","else","when","go to","goback","."]:
 		if word in lineDict:
-			lineDict["return statement"] = word
-			break
+			if not (word == "go to" and "depending" in lineDict):
+				lineDict["return statement"] = word
+				break
 	
 	return lineDict
 	
