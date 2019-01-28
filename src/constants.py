@@ -1,6 +1,6 @@
 
 #paths
-PATH = "D:\\CAAGIS flow tracker\\"
+PATH = "D:\\COBOL flow tracker\\"
 
 MTP = PATH + "MTP\\"
 MTPZIP = PATH + "MTP ZIP\\"
