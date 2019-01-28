@@ -56,7 +56,7 @@ def expandFile(inputFile):
 				
 				if "replacing" in inputLine:
 					inputLine = inputLine[inputLine.find("replacing") + len("replacing") + 1:-1].strip()
-					inputLine = inputLine.replace("==","").replace("'","")
+					inputLine = inputLine.replace("==","").replace("'","").strip()
 					replacedText = inputLine[:inputLine.find(" ")].upper()
 					replacingText = inputLine[inputLine.rfind(" ") + 1:].upper()
 					

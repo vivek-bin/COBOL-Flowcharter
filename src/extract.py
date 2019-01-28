@@ -14,7 +14,7 @@ def extractParaNames(f):
 		if f[i].startswith("procedure division"):
 			break
 	for j in range(i+1,len(f)):
-		if f[j][0] != " ":
+		if f[j][0] != " " and f[j].find(" ") == -1:
 			paras.append(f[j])
 	paras = [p[:-1] for p in paras]
 	return paras
@@ -52,9 +52,11 @@ def appendDATA(inputFileName,inputList):
 		return False
 		
 def getData(fn):
+	p = []
+	v = []
 	f = loadFile(fn)
 	p = extractParaNames(f)
-	v = extractVariableNames(f)
+	#v = extractVariableNames(f)
 
 	
 	for a in p:
@@ -62,8 +64,6 @@ def getData(fn):
 	for a in v:
 		vd[a] = True
 	
-	#appendDATA("paras",p)
-	#appendDATA("vars",v)
 
 		
 def a(start,end):
@@ -78,4 +78,48 @@ def a(start,end):
 	appendDATA("paras",pd.keys())
 	appendDATA("vars",vd.keys())
 	
-a(0,632300)
+#a(0,632300)
+
+def getBases():
+	v = open("D:\\CAI auto\\New folder\\data\\v.txt")
+	vl = [e.rstrip().lower() for e in v]
+	v.close()
+	p = open("D:\\CAI auto\\New folder\\data\\p.txt")
+	pl = [e.rstrip().lower() for e in p]
+	p.close()
+	ew = open("D:\\CAI auto\\New folder\\data\\ew.txt")
+	ewl = [e.rstrip().lower() for e in ew]
+	ew.close()
+	fw = open("D:\\CAI auto\\New folder\\data\\fw.txt")
+	fwl = [e.rstrip().lower() for e in fw]
+	fw.close()
+
+
+	ch = {}
+
+
+	for ele in vl:
+		for chr in ele:
+			ch[chr] = True
+			
+	for ele in pl:
+		for chr in ele:
+			ch[chr] = True
+			
+	for ele in ewl:
+		for chr in ele:
+			ch[chr] = True
+			
+	for ele in fwl:
+		for chr in ele:
+			ch[chr] = True
+			
+			
+			
+	allChars = ch.keys()
+
+	print(len(allChars))
+	
+	return allChars
+	
+getBases()
