@@ -1,6 +1,9 @@
 generating tree
 - handle wrong go to's which break programs
 - exec cics return/call/tsq etcetc
+		- ABEND also "returns"
+			EXEC CICS RETURN-   X'0E08'   (MIGHT BE VERSION DEPENDANT)
+
 - find values from non-trivial data structures
 		- AUTO batch, program npiobat not found
 		- GO TO ABND-2000-PROCESS-ABEND DEPENDING ON DFHEIGDI					(check)
@@ -15,5 +18,11 @@ drawing flowchart
 		....
 		p2.
 		go to p1.
+		
+		
+		
+usability
 - search?
+-
+
 
