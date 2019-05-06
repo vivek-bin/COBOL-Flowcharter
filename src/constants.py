@@ -1,17 +1,21 @@
+from inspect import getsourcefile
+from os.path import abspath
+from os.path import dirname
 
 #paths
-PATH = "D:\\COBOL flow tracker\\"
+PATH = dirname(dirname(dirname(abspath(getsourcefile(lambda:0))))) + "/"
+#PATH = "D:\\COBOL flow tracker\\"
 
-MTP = PATH + "MTP\\"
-MTPZIP = PATH + "MTP ZIP\\"
-PROJECT = PATH + "PROJECT\\"
+MTP = PATH + "MTP/"
+MTPZIP = PATH + "MTP ZIP/"
+PROJECT = PATH + "PROJECT/"
 
-SRCELIB = MTP + "SRCELIB\\"
-COPYLIB = MTP + "COPYLIB\\"
-INCLUDE = MTP + "INCLUDE\\"
-EXPANDED = MTP + "EXPANDED\\"
-PROCESSING = MTP + "PROCESSING\\"
-TREES = MTP + "TREES\\"
+SRCELIB = MTP + "SRCELIB/"
+COPYLIB = MTP + "COPYLIB/"
+INCLUDE = MTP + "INCLUDE/"
+EXPANDED = MTP + "EXPANDED/"
+PROCESSING = MTP + "PROCESSING/"
+TREES = MTP + "TREES/"
 
 SRCEZIP = MTPZIP + "SRCELIB.zip"
 COPYZIP = MTPZIP + "COPYLIB.zip"
@@ -20,7 +24,7 @@ EXPANDEDZIP = MTPZIP + "EXPANDED.zip"
 PROCESSINGZIP = MTPZIP + "PROCESSING.zip"
 TREESZIP = MTPZIP + "TREES.zip"
 
-DATA = PROJECT + "DATA\\"
+DATA = PROJECT + "data/"
 
 #line number tracking
 ZEROPAD = 8
@@ -36,10 +40,10 @@ BRANCHSPACE = 30
 FONT = ("League Gothic",9,"bold")
 TOOLTIPFONT = ("Times New Roman",7,"normal")
 
-ICONS = PROJECT + "icons\\"
+ICONS = PROJECT + "icons/"
 
 
-FLOWCUSTOM = DATA + "flowchart-customize\\"
+FLOWCUSTOM = DATA + "flowchart-customize/"
 def loadCustomization(inputFileName):
 	f = []
 	try:

@@ -18,7 +18,7 @@ drawing flowchart
 		....
 		p2.
 		go to p1.
-		
+- going to relevant line number of notepad-plus-plus does not workin ubuntu
 		
 		
 usability

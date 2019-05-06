@@ -103,6 +103,7 @@ def appendDATA(inputFileName,inputLine):
 		iFile.close()
 		return False
 	except IOError:
+		print("Append IO error")
 		return False
 
 def writeDATA(inputFileName,inputLine=""):

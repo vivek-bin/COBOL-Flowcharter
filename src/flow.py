@@ -1,9 +1,10 @@
 import constants as CONST
-import os
-import subprocess
 import nodes
 import createTree
 import fileaccess
+
+import os
+import subprocess
 import textwrap
 import sys
 import inspect
@@ -13,7 +14,9 @@ try:
 except ImportError:
 	import tkinter as Tkinter
 from PIL import Image,ImageTk
+import platform
 
+OS = platform.system()
 
 class ChartFrame(Tkinter.Frame):
 	def __init__(self, parent,component):
@@ -89,7 +92,15 @@ class ChartFrame(Tkinter.Frame):
 			self.canvas.configure(scrollregion = chartBox)
 		
 	def mouseWheelScroll(self, event):
-		scroll = -1 * int(event.delta / 120)
+		if event.delta == 0:			# == linux
+			if event.num == 4:
+				scroll = -1
+			else:
+				scroll = 1
+		else:
+			scroll = -1 * int(event.delta / 120)
+			
+			
 		ctrlPressed = event.state & (1 << 2)
 		
 		if ctrlPressed:
@@ -171,8 +182,10 @@ class ChartFrame(Tkinter.Frame):
 		componentLocation = '"' + fileaccess.extractExpandedFile(self.component) + '"'
 		lineNo = "-n" + str(node.lineNo)
 		command = "\"" + CONST.NPLOCATION + "\"" +  " " +  componentLocation + " " + lineNo
-		
-		subprocess.call(command)
+		if OS == "Linux":
+			os.system("notepad-plus-plus" + " " + componentLocation + " " + lineNo)
+		else:
+			subprocess.call(command)
 	
 	def showToolTip(self,event):
 		canvas = event.widget
@@ -407,8 +420,11 @@ class ChartWindow(Tkinter.Toplevel):
 		chartBorder = 50
 		chartBox = (chartBox[0]-chartBorder,chartBox[1]-chartBorder,chartBox[2]+chartBorder,chartBox[3]+chartBorder)
 		self.chartFrame.canvas.configure(scrollregion = chartBox)
-		
-		self.bind("<MouseWheel>",self.chartFrame.mouseWheelScroll)
+		if OS == "Linux":
+			self.bind("<4>",self.chartFrame.mouseWheelScroll)
+			self.bind("<5>",self.chartFrame.mouseWheelScroll)
+		else:
+			self.bind("<MouseWheel>",self.chartFrame.mouseWheelScroll)
 		
 		print(time.time() - startTime)
 

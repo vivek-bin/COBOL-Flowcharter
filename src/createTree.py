@@ -2,10 +2,11 @@ import constants as CONST
 import keywords
 import processingfileclass as pfc
 import nodes
-import time
 import fileaccess
-import sys
 from processingunitclass import ProcessingUnit
+
+import sys
+import time
 
 depthcount = 0
 	
