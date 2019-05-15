@@ -554,7 +554,7 @@ def getChart(component):
 	
 	return fChart
 	
-def writeAllCharts(start=0,end=99):
+def writeAllCharts(start=250,end=1000):
 	startTime = time.time()
 	
 	fileaccess.openLib(fileaccess.PROCESSING)

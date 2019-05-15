@@ -3,7 +3,9 @@ generating tree
 - exec cics return/call/tsq etcetc
 		- ABEND also "returns"
 			EXEC CICS RETURN-   X'0E08'   (MIGHT BE VERSION DEPENDANT)
-
+- expansion of program	
+		- "USER-VSAM-1 SECTION. COPY PRAI1. "
+		- nested copybooks
 - find values from non-trivial data structures
 		- AUTO batch, program npiobat not found
 		- GO TO ABND-2000-PROCESS-ABEND DEPENDING ON DFHEIGDI					(check)

@@ -228,6 +228,7 @@ error
 esi 
 evaluate 
 every 
+exec
 examine 
 exceeds 
 exception 

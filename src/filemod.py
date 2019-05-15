@@ -187,6 +187,9 @@ def processingFileClean(inputFile):
 		
 		if inputWords[0] == "exec":
 			execFlag = True
+			if line:
+				file.append(line)
+				line = ""
 		if "end-exec" in inputWords:
 			file.append(lineNo + inputLine)
 			execFlag = False
