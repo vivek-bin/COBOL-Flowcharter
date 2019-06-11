@@ -85,16 +85,17 @@ def a(start,end):
 #a(0,632300)
 
 def getBases():
-	v = open("D:\\CAI auto\\New folder\\data\\v.txt")
+	path = "D:\\CAI auto\\New folder\\data\\"
+	v = open(path + "v.txt")
 	vl = [e.rstrip().lower() for e in v]
 	v.close()
-	p = open("D:\\CAI auto\\New folder\\data\\p.txt")
+	p = open(path + "p.txt")
 	pl = [e.rstrip().lower() for e in p]
 	p.close()
-	ew = open("D:\\CAI auto\\New folder\\data\\ew.txt")
+	ew = open(path + "ew.txt")
 	ewl = [e.rstrip().lower() for e in ew]
 	ew.close()
-	fw = open("D:\\CAI auto\\New folder\\data\\fw.txt")
+	fw = open(path + "fw.txt")
 	fwl = [e.rstrip().lower() for e in fw]
 	fw.close()
 
