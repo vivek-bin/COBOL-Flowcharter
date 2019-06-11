@@ -1,10 +1,14 @@
 import fileaccess as FA
+import filemod
 
 pd={}
 vd={}
 
 def loadFile(fName):
-	f = FA.loadFile(FA.PROCESSING,fName)
+	f = FA.loadFile(FA.EXPANDED,fName)
+	f = filemod.processingFile(f)
+	f = filemod.processingFileClean(f)
+	
 	f = [l[8:] for l in f]
 	return f
 
@@ -67,13 +71,13 @@ def getData(fn):
 
 		
 def a(start,end):
-	FA.openLib(FA.PROCESSING)
-	l = FA.fileListLib(FA.PROCESSING)
+	FA.openLib(FA.EXPANDED)
+	l = FA.fileListLib(FA.EXPANDED)
 	processingList = l[start:end]
 		
 	for fileName in processingList:
 		getData(fileName)
-	FA.closeLib(FA.PROCESSING)
+	FA.closeLib(FA.EXPANDED)
 	
 	appendDATA("paras",pd.keys())
 	appendDATA("vars",vd.keys())

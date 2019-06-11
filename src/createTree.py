@@ -4,6 +4,7 @@ import processingfileclass as pfc
 import nodes
 import fileaccess
 from processingunitclass import ProcessingUnit
+import filemod
 
 import sys
 import time
@@ -540,35 +541,44 @@ def getChart(component):
 	PU = False
 	fChart = []
 	
-	fileaccess.openLib(fileaccess.PROCESSING)
-	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
+	fileaccess.openLib(fileaccess.EXPANDED)
+	fileList = fileaccess.fileListLib(fileaccess.EXPANDED)
 	fileaccess.writeDATA("log")
-	file = fileaccess.loadFile(fileaccess.PROCESSING,component)
+	file = fileaccess.loadFile(fileaccess.EXPANDED,component)
+	if not filemod.isCobolProgram(file):
+		return []
+		
+	file = filemod.processingFile(file)
+	file = filemod.processingFileClean(file)
+	
+	
 	#file = fileaccess.loadDATA("test")
 	if file:
 		PU, fChart = generateChart(file)
 	#	fileaccess.writePickle(component,fChart)
 	#fChart = fileaccess.loadPickle(component)
 	
-	fileaccess.closeLib(fileaccess.PROCESSING)
+	fileaccess.closeLib(fileaccess.EXPANDED)
 	
 	return fChart
 	
 def writeAllCharts(start=250,end=1000):
 	startTime = time.time()
 	
-	fileaccess.openLib(fileaccess.PROCESSING)
+	fileaccess.openLib(fileaccess.EXPANDED)
 	
-	l = fileaccess.fileListLib(fileaccess.PROCESSING)
+	l = fileaccess.fileListLib(fileaccess.EXPANDED)
 	processingList = l[start:end]
 	
 	for fileName in processingList:
 		print(fileName)
-		src = fileaccess.loadFile(fileaccess.PROCESSING,fileName)
-		PU, fChart = generateChart(src)
+		file = fileaccess.loadFile(fileaccess.EXPANDED,fileName)
+		file = filemod.processingFile(file)
+		file = filemod.processingFileClean(file)
+		PU, fChart = generateChart(file)
 		fileaccess.writePickle(fileName,fChart)
 	
-	fileaccess.closeLib(fileaccess.PROCESSING)
+	fileaccess.closeLib(fileaccess.EXPANDED)
 
 
 	print(time.time() - startTime)

@@ -169,12 +169,18 @@ def getChart(component):
 	PU = False
 	fChart = []
 	
-	fileaccess.openLib(fileaccess.PROCESSING)
+	fileaccess.openLib(fileaccess.EXPANDED)
 	fileaccess.openLib(fileaccess.SRCELIB)
-	fileList = fileaccess.fileListLib(fileaccess.PROCESSING)
+	fileList = fileaccess.fileListLib(fileaccess.EXPANDED)
 	fileaccess.writeDATA("log")
 	srceFile = fileaccess.loadFile(fileaccess.SRCELIB,component)
-	processingFile = fileaccess.loadFile(fileaccess.PROCESSING,component)
+	
+	processingFile = fileaccess.loadFile(fileaccess.EXPANDED,component)
+	processingFile = filemod.processingFile(processingFile)
+	processingFile = filemod.processingFileClean(processingFile)
+	
+	
+	
 	#file = fileaccess.loadDATA("test")
 	if processingFile and srceFile:
 		file,copybooks,copybooksReplacing = getFieldsCopybooks(srceFile)
@@ -185,7 +191,7 @@ def getChart(component):
 	#fileaccess.writePickle(component,fChart)
 	#f2 = fileaccess.loadPickle(component)
 	
-	fileaccess.closeLib(fileaccess.PROCESSING)
+	fileaccess.closeLib(fileaccess.EXPANDED)
 	fileaccess.closeLib(fileaccess.SRCELIB)
 	
 	return fChart
